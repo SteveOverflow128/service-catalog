@@ -1,0 +1,12 @@
+{
+  "$schema": "https://service-catalog.internal/schemas/service-catalog.schema.json",
+  "serviceId": "internal-tool",
+  "name": "Internal Tool",
+  "team": "Platform Tools",
+  "teamEmail": "platform-tools@example.com",
+  "lifecycle": "prod",
+  "criticalityTier": 3,
+  "repository": "https://git.example.com/platform/internal-tool",
+  "containsPHI": false,
+  "containsPII": false
+}

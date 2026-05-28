@@ -1,0 +1,17 @@
+{
+  "serviceId": "broken",
+  "name": "Broken",
+  "team": "T",
+  "teamEmail": "x@example.com",
+  "lifecycle": "prod",
+  "criticalityTier": 3,
+  "repository": "https://example.com",
+  "containsPHI": false,
+  "containsPII": false,
+  "features": [
+    { "name": "Real Feature" }
+  ],
+  "dependencies": [
+    { "serviceId": "other", "interaction": "sync-http", "critical": false, "purpose": "x", "external": false, "supportsFeatures": ["Phantom Feature"] }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "serviceId": "broken",
+  "name": "Broken",
+  "team": "T",
+  "teamEmail": "x@example.com",
+  "lifecycle": "prod",
+  "criticalityTier": 3,
+  "repository": "https://example.com",
+  "containsPHI": false,
+  "containsPII": false,
+  "dependencies": [
+    { "serviceId": "other", "interaction": "rest", "critical": false, "purpose": "x", "external": false }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "serviceId": "broken",
+  "name": "Broken",
+  "teamEmail": "x@example.com",
+  "lifecycle": "prod",
+  "criticalityTier": 3,
+  "repository": "https://example.com",
+  "containsPHI": false,
+  "containsPII": false
+}

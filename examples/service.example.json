@@ -1,0 +1,72 @@
+{
+  "$schema": "https://service-catalog.internal/schemas/service-catalog.schema.json",
+
+  "serviceId": "task-service",
+  "name": "Task Service",
+  "description": "Manages tasks, assignments, and due dates for the project-management platform.",
+  "lifecycle": "prod",
+  "criticalityTier": 1,
+  "repository": "https://git.example.com/platform/task-service",
+  "runtime": "java-21",
+
+  "team": "Workflow Team",
+  "teamEmail": "workflow-team@example.com",
+
+  "product": "Projects",
+  "valueStream": "Collaboration",
+  "financeProduct": "Core-Platform",
+  "train": "Atlas",
+
+  "containsPHI": false,
+  "containsPII": true,
+
+  "awsServices": [
+    { "type": "rds", "purpose": "Primary OLTP store for tasks and assignments", "engine": "postgres", "version": "16.2", "drStrategy": "startRestoreFromBackup" },
+    { "type": "sqs", "purpose": "Async task-event queue for notifications", "drStrategy": "startEmpty" },
+    { "type": "s3",  "purpose": "Task attachment storage",                  "drStrategy": "startWithReplicatedData" }
+  ],
+
+  "datastores": [
+    { "name": "tasks_oltp",       "type": "postgres", "restrictedData": true,  "critical": true,  "retention": "P3Y"  },
+    { "name": "task-attachments", "type": "s3",       "restrictedData": true,  "critical": false, "retention": "P1Y" }
+  ],
+
+  "features": [
+    { "name": "Task Management", "description": "Create, assign, and track tasks with due dates and status transitions" },
+    { "name": "Notifications",   "description": "Email and in-app notifications for task assignments and due-date changes" }
+  ],
+
+  "dependencies": [
+    {
+      "serviceId": "auth-service",
+      "interaction": "sync-http",
+      "critical": true,
+      "purpose": "Validate user sessions and resolve permissions",
+      "external": false,
+      "endpoint": "https://auth-service.internal/v1/verify",
+      "supportsFeatures": ["Task Management", "Notifications"]
+    },
+    {
+      "serviceId": "acme-email",
+      "interaction": "async-http",
+      "critical": false,
+      "purpose": "Transactional email delivery for task notifications",
+      "external": true,
+      "supportsFeatures": ["Notifications"]
+    },
+    {
+      "serviceId": "billing-exports",
+      "interaction": "sftp",
+      "critical": false,
+      "purpose": "Nightly usage export drop for the finance team",
+      "external": false
+    }
+  ],
+
+  "tags": {
+    "team": "workflow",
+    "iac": "terraform",
+    "costCenter": "CC-1001",
+    "complianceScope": "SOC2"
+  }
+}
