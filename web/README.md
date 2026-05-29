@@ -81,9 +81,9 @@ Columns are a fixed catalog defined in `src/data/csv.ts`:
   `teamEmail`, `criticalityTier`, `awsServices.type` (the service's AWS service
   types, one cell), `primaryDependents` (serviceIds that **directly depend on**
   this service, one cell).
-- **Available:** `rdsEngine`, `rdsVersion` (engine/version of the service's RDS
-  `awsService`, blank when it has none), `name`, `runtime`, `softwareFramework`,
-  `dataClassification`, `financeProduct`.
+- **Available:** `rdsEngine`, `rdsVersion`, `rdsInstanceType` (engine / version /
+  instanceType of the service's RDS `awsService`, blank when it has none),
+  `name`, `runtime`, `softwareFramework`, `dataClassification`, `financeProduct`.
 
 Toggle columns (or use all / defaults / none); the preview updates live. Copy or
 download `service-mesh.csv`. Multi-valued cells are `;`-joined; values are

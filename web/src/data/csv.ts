@@ -53,6 +53,12 @@ export const CSV_FIELDS: CsvField[] = [
     hint: 'version of the RDS awsService, when present',
     value: (s) => rdsAws(s)?.version ?? '',
   },
+  {
+    key: 'rdsInstanceType',
+    default: false,
+    hint: 'instanceType of the RDS awsService, when present',
+    value: (s) => rdsAws(s)?.instanceType ?? '',
+  },
   { key: 'name', default: false, value: (s) => s.name },
   { key: 'runtime', default: false, value: (s) => s.runtime ?? '' },
   { key: 'softwareFramework', default: false, value: (s) => s.softwareFramework ?? '' },

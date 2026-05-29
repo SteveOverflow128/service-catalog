@@ -33,6 +33,7 @@ export interface AwsService {
   purpose: string;
   engine?: string;
   version?: string;
+  instanceType?: string;
   drStrategy?: string;
 }
 

@@ -44,10 +44,11 @@
         "additionalProperties": false,
         "required": ["type", "purpose"],
         "properties": {
-          "type":       { "type": "string", "minLength": 1 },
-          "purpose":    { "type": "string", "minLength": 1 },
-          "engine":     { "type": "string" },
-          "version":    { "type": "string" },
+          "type":         { "type": "string", "minLength": 1 },
+          "purpose":      { "type": "string", "minLength": 1 },
+          "engine":       { "type": "string" },
+          "version":      { "type": "string" },
+          "instanceType": { "type": "string" },
           "drStrategy": {
             "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive", "unknown"]
           }
