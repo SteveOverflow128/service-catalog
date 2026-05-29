@@ -48,7 +48,7 @@
           "engine":     { "type": "string" },
           "version":    { "type": "string" },
           "drStrategy": {
-            "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive"]
+            "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive", "unknown"]
           }
         }
       }
