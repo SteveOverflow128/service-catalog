@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://service-catalog.internal/schemas/service-catalog.extension.schema.json",
+  "title": "Service Catalog Entry (Company Extension)",
+  "description": "Overlays company-specific enum constraints on top of the base schema. Replace enum values with your actual framework names.",
+  "allOf": [
+    { "$ref": "https://service-catalog.internal/schemas/service-catalog.schema.json" }
+  ],
+  "properties": {
+    "softwareFramework": {
+      "enum": ["ruby", "sapphire", "emerald", "diamond", "topaz"]
+    }
+  }
+}
