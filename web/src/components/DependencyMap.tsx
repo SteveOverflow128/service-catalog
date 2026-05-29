@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react';
 import type { CatalogIndex } from '../data/catalog';
 import type { Depth, MapMode } from '../types';
 import { buildEgoElements, dagreLayout } from '../graph/build';
+import { toMermaid } from '../graph/mermaid';
 import { GraphCanvas } from './GraphCanvas';
 import { Legend } from './Legend';
-import { BothIcon, DownstreamIcon, UpstreamIcon } from './icons';
+import { MermaidExport } from './MermaidExport';
+import { BothIcon, CodeIcon, DownstreamIcon, UpstreamIcon } from './icons';
 
 const MODES: { key: MapMode; label: string; hint: string; Icon: typeof BothIcon }[] = [
   { key: 'dependencies', label: 'Dependencies', hint: 'what this calls', Icon: DownstreamIcon },
@@ -31,9 +33,17 @@ export function DependencyMap({
   // Depth 1 (immediate neighborhood) keeps the default map readable even for
   // services wired to mega-hubs like auth-service (49 dependants); 2/All expand.
   const [depth, setDepth] = useState<Depth>(1);
+  const [exporting, setExporting] = useState(false);
 
   const ego = useMemo(() => index.ego(rootId, mode, depth), [index, rootId, mode, depth]);
   const elements = useMemo(() => buildEgoElements(index, ego), [index, ego]);
+
+  const depthLabel = depth === 0 ? 'all hops' : `${depth} hop${depth === 1 ? '' : 's'}`;
+  const mermaid = () =>
+    toMermaid(index, ego.nodes, ego.edges, {
+      rootId,
+      title: `${index.byId.get(rootId)?.name ?? rootId} — ${mode} · ${depthLabel}`,
+    });
 
   const criticalEdges = ego.edges.filter((e) => e.dep.critical).length;
   const externalNodes = [...ego.nodes].filter((id) => !index.byId.has(id)).length;
@@ -91,6 +101,11 @@ export function DependencyMap({
             </span>
           )}
         </div>
+
+        <button className="exportbtn" onClick={() => setExporting(true)} title="Export this map as a Mermaid diagram">
+          <CodeIcon width={15} height={15} />
+          <span>Mermaid</span>
+        </button>
       </div>
 
       <div className="depmap__canvaswrap">
@@ -113,6 +128,15 @@ export function DependencyMap({
         )}
         <Legend />
       </div>
+
+      {exporting && (
+        <MermaidExport
+          title={`${index.byId.get(rootId)?.name ?? rootId} · ${mode} · ${depthLabel}`}
+          filename={`${rootId}-${mode}-${depth === 0 ? 'all' : depth + 'hop'}.mmd`}
+          code={mermaid()}
+          onClose={() => setExporting(false)}
+        />
+      )}
     </div>
   );
 }

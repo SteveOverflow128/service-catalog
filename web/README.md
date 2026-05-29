@@ -57,8 +57,18 @@ reverse-proxy path prefix.
 | View | What it shows |
 |------|---------------|
 | **Catalog** | Searchable, faceted card list (criticality, lifecycle, data classification, team, product, value stream, interaction, framework). Sort by criticality / most-depended-on / most-dependencies / name. |
-| **Service map** | Open a service → full metadata panel + dependency map. Toggle **Dependencies / Dependants / Both** and traversal depth (1 hop / 2 hops / All). Click any node to re-center on it. |
-| **Mesh** | Force-directed map of the entire service graph. Node size scales with connection count; hover isolates a neighborhood. |
+| **Service map** | Open a service → full metadata panel + dependency map. Toggle **Dependencies / Dependants / Both** and traversal depth (1 hop / 2 hops / All). Click any node to re-center on it. **Export → Mermaid** generates a `flowchart` of exactly the current map. |
+| **Mesh** | Force-directed map of the entire service graph. Node size scales with connection count; hover isolates a neighborhood. **Export → Mermaid** dumps the whole mesh. |
+
+## Mermaid export
+
+Both the service map and the mesh have a **Mermaid** button that generates a
+`flowchart` of what's on screen — the selected service's neighborhood (honoring
+the active mode + depth), or the full mesh. Critical edges render thick (`==>`),
+external ones dotted (`-.->`); nodes are colored by criticality tier and the
+focal service is highlighted. Copy to clipboard or download a `.mmd` file — the
+diagram is generated entirely in-browser (nothing is sent to an external
+rendering service), then paste it into GitHub, your docs, or any Mermaid editor.
 
 ## Stack
 

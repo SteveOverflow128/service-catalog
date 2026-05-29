@@ -136,3 +136,28 @@ export const WarnIcon = (p: SVGProps<SVGSVGElement>) => (
     <path d="M12 10v4M12 17.5v.5" />
   </svg>
 );
+
+export const CodeIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="m9 8-5 4 5 4M15 8l5 4-5 4M13 5l-2 14" />
+  </svg>
+);
+
+export const CopyIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+  </svg>
+);
+
+export const CheckIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="m4 12 5 5L20 6" />
+  </svg>
+);
+
+export const DownloadIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M12 4v11m0 0 4-4m-4 4-4-4M4 19h16" />
+  </svg>
+);
