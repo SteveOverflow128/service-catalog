@@ -95,7 +95,7 @@
         "required": ["serviceId", "interaction", "critical", "purpose", "external"],
         "properties": {
           "serviceId":   { "type": "string", "minLength": 1 },
-          "interaction": { "enum": ["sync-http", "async-http", "async-event", "sftp", "batch"] },
+          "interaction": { "enum": ["sync-http", "async-http", "async-event", "sftp", "batch", "fdw", "dfs"] },
           "critical":    { "type": "boolean" },
           "purpose":     { "type": "string", "minLength": 1 },
           "external":    { "type": "boolean" },
