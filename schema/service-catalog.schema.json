@@ -24,7 +24,8 @@
     "lifecycle":       { "enum": ["experimental", "non-prod", "prod", "sunset"] },
     "criticalityTier": { "type": "integer", "enum": [0, 1, 2, 3] },
     "repository":      { "type": "string", "format": "uri" },
-    "runtime":         { "type": "string" },
+    "runtime":           { "type": "string" },
+    "softwareFramework": { "type": "string", "minLength": 1 },
 
     "team":            { "type": "string", "minLength": 1 },
     "teamEmail":       { "type": "string", "format": "email" },
