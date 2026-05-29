@@ -1,0 +1,234 @@
+/* =========================================================================
+   Service Observatory — Infrastructure control-room theme
+   Brand-anchored (navy/blue), dark, blueprint-grid canvas.
+   ========================================================================= */
+
+:root {
+  /* --- Brand palette --- */
+  --navy-900: #061632;
+  --navy-800: #0b2a60;
+  --navy-700: #103e8e;
+  --blue-600: #1552bc;
+  --blue-500: #1b74cb;
+  --blue-400: #519ee6;
+  --blue-300: #6cafe7;
+  --blue-100: #bbd5ea;
+  --ink: #0a0b0f;
+  --ink-800: #16171d;
+  --slate-700: #292b32;
+  --slate-600: #393b46;
+  --slate-500: #454754;
+  --slate-400: #5e616e;
+  --slate-300: #838795;
+  --mist: #c4c8d2;
+  --white: #ffffff;
+
+  /* --- Semantic surfaces (dark) --- */
+  --bg-base: #050d1f;
+  --bg-canvas: #061632;
+  --surface-1: rgba(20, 32, 58, 0.55);
+  --surface-2: rgba(15, 25, 47, 0.78);
+  --surface-3: rgba(11, 20, 40, 0.92);
+  --surface-raised: rgba(28, 44, 78, 0.6);
+  --hairline: rgba(120, 160, 220, 0.14);
+  --hairline-strong: rgba(120, 160, 220, 0.28);
+
+  /* --- Text --- */
+  --text-hi: #eaf2fc;
+  --text-mid: #aebfd6;
+  --text-lo: #6f86a6;
+  --text-faint: #4d5f7d;
+
+  /* --- Accents --- */
+  --accent: #519ee6;
+  --accent-bright: #6cafe7;
+  --accent-deep: #1552bc;
+  --signal-crit: #ff4d5e;
+
+  /* --- Type --- */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* --- Shape --- */
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 10px;
+  --r-pill: 50px;
+
+  /* --- Motion --- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 0.42s;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-base);
+  color: var(--text-mid);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden; /* app manages its own scroll regions */
+}
+
+/* --- The blueprint canvas: layered grid + radial glow + grain --- */
+.observatory-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 12% -10%, rgba(27, 116, 203, 0.22), transparent 55%),
+    radial-gradient(90% 80% at 100% 0%, rgba(21, 82, 188, 0.18), transparent 50%),
+    radial-gradient(100% 120% at 50% 120%, rgba(6, 22, 50, 0.9), transparent 60%),
+    linear-gradient(180deg, #061731 0%, #050d1f 60%, #03070f 100%);
+}
+.observatory-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(120, 170, 230, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 170, 230, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(120, 170, 230, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 170, 230, 0.025) 1px, transparent 1px);
+  background-size:
+    96px 96px,
+    96px 96px,
+    24px 24px,
+    24px 24px;
+  mask-image: radial-gradient(130% 120% at 50% 0%, #000 35%, transparent 90%);
+}
+.observatory-bg::after {
+  /* subtle film grain */
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* --- Scrollbars --- */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(120, 160, 220, 0.18);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 160, 220, 0.32);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* --- Typographic primitives --- */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'zero' 1;
+}
+.overline {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-lo);
+}
+.h-display {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-hi);
+}
+
+a {
+  color: var(--accent-bright);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+::selection {
+  background: rgba(81, 158, 230, 0.32);
+  color: #fff;
+}
+
+/* Focus ring — accessible, brand blue, never suppressed */
+:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+button {
+  font-family: inherit;
+}
+
+/* --- Shared keyframes --- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(81, 158, 230, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(81, 158, 230, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(81, 158, 230, 0);
+  }
+}
+@keyframes scan {
+  from {
+    background-position-y: 0;
+  }
+  to {
+    background-position-y: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

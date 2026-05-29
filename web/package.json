@@ -1,0 +1,33 @@
+{
+  "name": "service-catalog-explorer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Infrastructure Observatory — internal service catalog & dependency explorer",
+  "scripts": {
+    "catalog": "node scripts/build-catalog.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/build-catalog.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.1.1",
+    "@fontsource/ibm-plex-sans": "^5.1.1",
+    "cytoscape": "^3.30.4",
+    "cytoscape-dagre": "^2.5.0",
+    "cytoscape-fcose": "^2.2.0",
+    "dagre": "^0.8.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/cytoscape": "^3.21.9",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}

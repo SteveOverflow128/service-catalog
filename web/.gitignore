@@ -1,0 +1,6 @@
+node_modules
+dist
+.vite
+*.tsbuildinfo
+# generated from ../data by scripts/build-catalog.mjs
+public/catalog.json
