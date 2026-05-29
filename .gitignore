@@ -18,3 +18,7 @@ build/
 
 # Claude Code session config
 .claude/
+
+# Processing data (folder tracked, contents ignored)
+data/*
+!data/.gitkeep
