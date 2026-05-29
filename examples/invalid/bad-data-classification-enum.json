@@ -1,9 +1,10 @@
 {
   "serviceId": "broken",
   "name": "Broken",
+  "team": "T",
   "teamEmail": "x@example.com",
   "lifecycle": "prod",
   "criticalityTier": 3,
   "repository": "https://example.com",
-  "dataClassification": "INTERNAL"
+  "dataClassification": "PHI"
 }

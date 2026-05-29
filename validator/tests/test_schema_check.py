@@ -59,6 +59,12 @@ def test_bad_dr_strategy_enum_returns_error(schema):
     assert any("drStrategy" in e for e in errors)
 
 
+def test_bad_data_classification_enum_returns_error(schema):
+    data = load_invalid("bad-data-classification-enum.json")
+    errors = check_against_schema(data, schema)
+    assert any("dataClassification" in e for e in errors)
+
+
 def test_bad_team_email_returns_error(schema, minimal_example):
     """Format keywords (email, uri) must be enforced by the validator."""
     bad = dict(minimal_example)

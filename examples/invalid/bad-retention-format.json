@@ -6,8 +6,7 @@
   "lifecycle": "prod",
   "criticalityTier": 3,
   "repository": "https://example.com",
-  "containsPHI": false,
-  "containsPII": false,
+  "dataClassification": "INTERNAL",
   "datastores": [
     { "name": "x", "type": "postgres", "restrictedData": false, "critical": false, "retention": "7 years" }
   ]

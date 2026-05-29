@@ -7,6 +7,5 @@
   "criticalityTier": 3,
   "crticalityTier": 0,
   "repository": "https://example.com",
-  "containsPHI": false,
-  "containsPII": false
+  "dataClassification": "INTERNAL"
 }

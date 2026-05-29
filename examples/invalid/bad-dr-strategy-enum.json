@@ -6,8 +6,7 @@
   "lifecycle": "prod",
   "criticalityTier": 3,
   "repository": "https://example.com",
-  "containsPHI": false,
-  "containsPII": false,
+  "dataClassification": "INTERNAL",
   "awsServices": [
     { "type": "rds", "purpose": "x", "drStrategy": "activeactive" }
   ]

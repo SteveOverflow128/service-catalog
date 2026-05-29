@@ -13,8 +13,7 @@
     "lifecycle",
     "criticalityTier",
     "repository",
-    "containsPHI",
-    "containsPII"
+    "dataClassification"
   ],
   "properties": {
     "$schema": { "type": "string", "format": "uri" },
@@ -35,8 +34,7 @@
     "financeProduct":  { "type": "string" },
     "train":           { "type": "string" },
 
-    "containsPHI":     { "type": "boolean" },
-    "containsPII":     { "type": "boolean" },
+    "dataClassification": { "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"] },
 
     "awsServices": {
       "type": "array",

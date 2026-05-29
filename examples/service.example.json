@@ -17,8 +17,7 @@
   "financeProduct": "Core-Platform",
   "train": "Atlas",
 
-  "containsPHI": false,
-  "containsPII": true,
+  "dataClassification": "CONFIDENTIAL",
 
   "awsServices": [
     { "type": "rds", "purpose": "Primary OLTP store for tasks and assignments", "engine": "postgres", "version": "16.2", "drStrategy": "startRestoreFromBackup" },

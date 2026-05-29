@@ -6,6 +6,5 @@
   "lifecycle": "prod",
   "criticalityTier": 5,
   "repository": "https://example.com",
-  "containsPHI": false,
-  "containsPII": false
+  "dataClassification": "INTERNAL"
 }
