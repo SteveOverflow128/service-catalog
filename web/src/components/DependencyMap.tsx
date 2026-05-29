@@ -6,7 +6,8 @@ import { toMermaid } from '../graph/mermaid';
 import { GraphCanvas } from './GraphCanvas';
 import { Legend } from './Legend';
 import { MermaidExport } from './MermaidExport';
-import { BothIcon, CodeIcon, DownstreamIcon, UpstreamIcon } from './icons';
+import { CsvExport } from './CsvExport';
+import { BothIcon, CodeIcon, DownstreamIcon, TableIcon, UpstreamIcon } from './icons';
 
 const MODES: { key: MapMode; label: string; hint: string; Icon: typeof BothIcon }[] = [
   { key: 'dependencies', label: 'Dependencies', hint: 'what this calls', Icon: DownstreamIcon },
@@ -34,9 +35,16 @@ export function DependencyMap({
   // services wired to mega-hubs like auth-service (49 dependants); 2/All expand.
   const [depth, setDepth] = useState<Depth>(1);
   const [exporting, setExporting] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   const ego = useMemo(() => index.ego(rootId, mode, depth), [index, rootId, mode, depth]);
   const elements = useMemo(() => buildEgoElements(index, ego), [index, ego]);
+
+  // Catalog services in the current neighborhood (externals have no full record).
+  const egoServices = useMemo(
+    () => [...ego.nodes].map((id) => index.byId.get(id)).filter((s): s is NonNullable<typeof s> => !!s),
+    [ego, index],
+  );
 
   const depthLabel = depth === 0 ? 'all hops' : `${depth} hop${depth === 1 ? '' : 's'}`;
   const mermaid = () =>
@@ -102,10 +110,20 @@ export function DependencyMap({
           )}
         </div>
 
-        <button className="exportbtn" onClick={() => setExporting(true)} title="Export this map as a Mermaid diagram">
-          <CodeIcon width={15} height={15} />
-          <span>Mermaid</span>
-        </button>
+        <div className="mesh__exports">
+          <button
+            className="exportbtn"
+            onClick={() => setExportingCsv(true)}
+            title="Export the services in this map as a CSV"
+          >
+            <TableIcon width={15} height={15} />
+            <span>CSV</span>
+          </button>
+          <button className="exportbtn" onClick={() => setExporting(true)} title="Export this map as a Mermaid diagram">
+            <CodeIcon width={15} height={15} />
+            <span>Mermaid</span>
+          </button>
+        </div>
       </div>
 
       <div className="depmap__canvaswrap">
@@ -135,6 +153,16 @@ export function DependencyMap({
           filename={`${rootId}-${mode}-${depth === 0 ? 'all' : depth + 'hop'}.mmd`}
           code={mermaid()}
           onClose={() => setExporting(false)}
+        />
+      )}
+
+      {exportingCsv && (
+        <CsvExport
+          index={index}
+          services={egoServices}
+          title={`Export ${index.byId.get(rootId)?.name ?? rootId} map as CSV`}
+          filename={`${rootId}-${mode}-${depth === 0 ? 'all' : depth + 'hop'}.csv`}
+          onClose={() => setExportingCsv(false)}
         />
       )}
     </div>

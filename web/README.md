@@ -57,8 +57,8 @@ reverse-proxy path prefix.
 | View | What it shows |
 |------|---------------|
 | **Catalog** | Searchable, faceted card list (criticality, lifecycle, data classification, team, product, value stream, interaction, framework). Sort by criticality / most-depended-on / most-dependencies / name. |
-| **Service map** | Open a service → full metadata panel + dependency map. Toggle **Dependencies / Dependants / Both** and traversal depth (1 hop / 2 hops / All). Click any node to re-center on it. **Export → Mermaid** generates a `flowchart` of exactly the current map. |
-| **Mesh** | Force-directed map of the entire service graph. Node size scales with connection count; hover isolates a neighborhood. **Export → Mermaid** dumps the whole mesh. |
+| **Service map** | Open a service → full metadata panel + dependency map. Toggle **Dependencies / Dependants / Both** and traversal depth (1 hop / 2 hops / All). Click any node to re-center on it. **Export → Mermaid / CSV** of exactly the current neighborhood. |
+| **Mesh** | Force-directed map of the entire service graph. Node size scales with connection count; hover isolates a neighborhood. **Export → Mermaid / CSV** of the whole mesh. |
 
 ## Mermaid export
 
@@ -69,6 +69,25 @@ external ones dotted (`-.->`); nodes are colored by criticality tier and the
 focal service is highlighted. Copy to clipboard or download a `.mmd` file — the
 diagram is generated entirely in-browser (nothing is sent to an external
 rendering service), then paste it into GitHub, your docs, or any Mermaid editor.
+
+## CSV export
+
+Both the mesh and the service map have a **CSV** button that opens a column
+picker (one row per service). The mesh exports every service; the service map
+exports just the services in the current neighborhood (honoring mode + depth).
+Columns are a fixed catalog defined in `src/data/csv.ts`:
+
+- **On by default:** `serviceId`, `valueStream`, `train`, `product`, `team`,
+  `teamEmail`, `criticalityTier`, `awsServices.type` (the service's AWS service
+  types, one cell), `primaryDependents` (serviceIds that **directly depend on**
+  this service, one cell).
+- **Available:** `rdsEngine`, `rdsVersion` (engine/version of the service's RDS
+  `awsService`, blank when it has none), `name`, `runtime`, `softwareFramework`,
+  `dataClassification`, `financeProduct`.
+
+Toggle columns (or use all / defaults / none); the preview updates live. Copy or
+download `service-mesh.csv`. Multi-valued cells are `;`-joined; values are
+RFC 4180-quoted only when they contain a comma/quote/newline.
 
 ## Stack
 

@@ -5,7 +5,8 @@ import { toMermaid } from '../graph/mermaid';
 import { GraphCanvas } from './GraphCanvas';
 import { Legend } from './Legend';
 import { MermaidExport } from './MermaidExport';
-import { CodeIcon } from './icons';
+import { CsvExport } from './CsvExport';
+import { CodeIcon, TableIcon } from './icons';
 
 export function MeshView({
   index,
@@ -16,6 +17,7 @@ export function MeshView({
 }) {
   const elements = useMemo(() => buildMeshElements(index), [index]);
   const [exporting, setExporting] = useState(false);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   const handleClick = (id: string) => {
     if (index.byId.has(id)) onSelectNode(id);
@@ -42,10 +44,16 @@ export function MeshView({
             Force-directed map of every catalogued service. Hubs grow with connection count — hover to isolate a
             neighborhood, click to open a service.
           </p>
-          <button className="exportbtn" onClick={() => setExporting(true)} title="Export the full mesh as a Mermaid diagram">
-            <CodeIcon width={15} height={15} />
-            <span>Mermaid</span>
-          </button>
+          <div className="mesh__exports">
+            <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export services as a CSV">
+              <TableIcon width={15} height={15} />
+              <span>CSV</span>
+            </button>
+            <button className="exportbtn" onClick={() => setExporting(true)} title="Export the full mesh as a Mermaid diagram">
+              <CodeIcon width={15} height={15} />
+              <span>Mermaid</span>
+            </button>
+          </div>
         </div>
       </div>
       <div className="mesh__canvaswrap">
@@ -59,6 +67,16 @@ export function MeshView({
           filename="service-mesh.mmd"
           code={toMermaid(index, allNodeIds(), index.allEdges, { title: 'Full service mesh', direction: 'LR' })}
           onClose={() => setExporting(false)}
+        />
+      )}
+
+      {exportingCsv && (
+        <CsvExport
+          index={index}
+          services={index.services}
+          title="Export mesh as CSV"
+          filename="service-mesh.csv"
+          onClose={() => setExportingCsv(false)}
         />
       )}
     </div>

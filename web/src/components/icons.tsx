@@ -161,3 +161,10 @@ export const DownloadIcon = (p: SVGProps<SVGSVGElement>) => (
     <path d="M12 4v11m0 0 4-4m-4 4-4-4M4 19h16" />
   </svg>
 );
+
+export const TableIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="16" rx="1.5" />
+    <path d="M3 9.5h18M3 15h18M9 4v16" />
+  </svg>
+);
