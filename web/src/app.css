@@ -1127,6 +1127,46 @@ code.mono {
   color: var(--text-lo);
   text-align: right;
 }
+.mesh__filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-1);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  height: 32px;
+  padding: 0 26px 0 10px;
+  background-color: var(--surface-2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23606880'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  color: var(--text-mid);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  transition: border-color 0.16s, color 0.16s, background-color 0.16s;
+}
+.filter-select:hover,
+.filter-select:focus {
+  border-color: var(--accent);
+  color: var(--text-hi);
+  background-color: var(--surface-3);
+}
+.filter-select option {
+  background: #1a1e2e;
+  color: #dfe4ec;
+}
+
 .mesh__canvaswrap {
   position: relative;
   flex: 1;

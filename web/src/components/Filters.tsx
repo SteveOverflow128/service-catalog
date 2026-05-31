@@ -4,25 +4,27 @@ import type { Facets } from '../data/catalog';
 import { classificationStyles, lifecycleStyles, tierStyle } from '../design/tokens';
 
 export interface FilterState {
+  trains: Set<string>;
   lifecycles: Set<string>;
   tiers: Set<string>;
   classifications: Set<string>;
   teams: Set<string>;
   products: Set<string>;
   valueStreams: Set<string>;
-  interactions: Set<string>;
   frameworks: Set<string>;
+  awsTypes: Set<string>;
 }
 
 export const emptyFilters = (): FilterState => ({
+  trains: new Set(),
   lifecycles: new Set(),
   tiers: new Set(),
   classifications: new Set(),
   teams: new Set(),
   products: new Set(),
   valueStreams: new Set(),
-  interactions: new Set(),
   frameworks: new Set(),
+  awsTypes: new Set(),
 });
 
 export function countActive(f: FilterState): number {
@@ -103,14 +105,15 @@ export function Filters({
 }) {
   const counts = useMemo(
     () => ({
+      trains: tally(services, (s) => (s.train ? [s.train] : [])),
       lifecycles: tally(services, (s) => [s.lifecycle]),
       tiers: tally(services, (s) => [String(s.criticalityTier)]),
       classifications: tally(services, (s) => [s.dataClassification]),
       teams: tally(services, (s) => (s.team ? [s.team] : [])),
       products: tally(services, (s) => (s.product ? [s.product] : [])),
       valueStreams: tally(services, (s) => (s.valueStream ? [s.valueStream] : [])),
-      interactions: tally(services, (s) => [...new Set((s.dependencies ?? []).map((d) => d.interaction))]),
       frameworks: tally(services, (s) => (s.softwareFramework ? [s.softwareFramework] : [])),
+      awsTypes: tally(services, (s) => (s.awsServices ?? []).map((a) => a.type)),
     }),
     [services],
   );
@@ -131,6 +134,12 @@ export function Filters({
         )}
       </div>
 
+      <FacetGroup
+        title="Train"
+        options={opts(facets.trains, counts.trains)}
+        selected={state.trains}
+        onToggle={(v) => onToggle('trains', v)}
+      />
       <FacetGroup
         title="Criticality"
         options={opts(facets.tiers, counts.tiers)}
@@ -174,17 +183,17 @@ export function Filters({
         defaultOpen={false}
       />
       <FacetGroup
-        title="Interaction"
-        options={opts(facets.interactions, counts.interactions)}
-        selected={state.interactions}
-        onToggle={(v) => onToggle('interactions', v)}
-        defaultOpen={false}
-      />
-      <FacetGroup
         title="Framework"
         options={opts(facets.frameworks, counts.frameworks)}
         selected={state.frameworks}
         onToggle={(v) => onToggle('frameworks', v)}
+        defaultOpen={false}
+      />
+      <FacetGroup
+        title="AWS Service"
+        options={opts(facets.awsTypes, counts.awsTypes)}
+        selected={state.awsTypes}
+        onToggle={(v) => onToggle('awsTypes', v)}
         defaultOpen={false}
       />
     </aside>
@@ -193,6 +202,7 @@ export function Filters({
 
 /** Pure predicate used by the list view. */
 export function matchesFilters(s: Service, f: FilterState): boolean {
+  if (f.trains.size && !(s.train && f.trains.has(s.train))) return false;
   if (f.lifecycles.size && !f.lifecycles.has(s.lifecycle)) return false;
   if (f.tiers.size && !f.tiers.has(String(s.criticalityTier))) return false;
   if (f.classifications.size && !f.classifications.has(s.dataClassification)) return false;
@@ -200,12 +210,7 @@ export function matchesFilters(s: Service, f: FilterState): boolean {
   if (f.products.size && !(s.product && f.products.has(s.product))) return false;
   if (f.valueStreams.size && !(s.valueStream && f.valueStreams.has(s.valueStream))) return false;
   if (f.frameworks.size && !(s.softwareFramework && f.frameworks.has(s.softwareFramework))) return false;
-  if (f.interactions.size) {
-    const have = new Set((s.dependencies ?? []).map((d) => d.interaction));
-    let hit = false;
-    for (const i of f.interactions) if (have.has(i as never)) hit = true;
-    if (!hit) return false;
-  }
+  if (f.awsTypes.size && !(s.awsServices ?? []).some((a) => f.awsTypes.has(a.type))) return false;
   return true;
 }
 

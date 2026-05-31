@@ -82,13 +82,33 @@ export function buildEgoElements(index: CatalogIndex, ego: EgoGraph): ElementDef
   return [...nodes, ...edges];
 }
 
-export function buildMeshElements(index: CatalogIndex): ElementDefinition[] {
-  const ids = new Set<string>();
-  for (const s of index.services) ids.add(s.serviceId);
-  for (const id of index.externals.keys()) ids.add(id);
-  const nodes = [...ids].map((id) => buildNode(index, id, '__none__'));
-  const edges = index.allEdges.map((e, i) => buildEdge(e, i));
-  return [...nodes, ...edges];
+export function buildMeshElements(
+  index: CatalogIndex,
+  opts?: { serviceIds?: Set<string>; showDeps?: boolean },
+): ElementDefinition[] {
+  const { serviceIds, showDeps = true } = opts ?? {};
+
+  if (!serviceIds) {
+    const ids = new Set<string>();
+    for (const s of index.services) ids.add(s.serviceId);
+    for (const id of index.externals.keys()) ids.add(id);
+    const nodes = [...ids].map((id) => buildNode(index, id, '__none__'));
+    const edges = index.allEdges.map((e, i) => buildEdge(e, i));
+    return [...nodes, ...edges];
+  }
+
+  if (!showDeps) {
+    return [...serviceIds].map((id) => buildNode(index, id, '__none__'));
+  }
+
+  // Filtered services + everything they depend on (cross-group services + externals).
+  const nodeIds = new Set<string>(serviceIds);
+  const edges = index.allEdges.filter((e) => serviceIds.has(e.from));
+  for (const e of edges) nodeIds.add(e.to);
+  return [
+    ...[...nodeIds].map((id) => buildNode(index, id, '__none__')),
+    ...edges.map((e, i) => buildEdge(e, i)),
+  ];
 }
 
 export const dagreLayout = (): LayoutOptions =>

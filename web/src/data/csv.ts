@@ -20,6 +20,7 @@ const rdsAws = (s: Service) => (s.awsServices ?? []).find((a) => a.type.toUpperC
 
 export const CSV_FIELDS: CsvField[] = [
   { key: 'serviceId', default: true, value: (s) => s.serviceId },
+  { key: 'catalogGroup', default: true, hint: 'freeform catalog grouping', value: (s) => s.catalogGroup ?? '' },
   { key: 'valueStream', default: true, value: (s) => s.valueStream ?? '' },
   { key: 'train', default: true, value: (s) => s.train ?? '' },
   { key: 'product', default: true, value: (s) => s.product ?? '' },

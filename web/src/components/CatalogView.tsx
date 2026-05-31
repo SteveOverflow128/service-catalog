@@ -3,6 +3,8 @@ import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { Filters, matchesFilters, matchesQuery, type FilterState } from './Filters';
 import { ServiceCard } from './ServiceCard';
+import { CsvExport } from './CsvExport';
+import { TableIcon } from './icons';
 import type { Facets } from '../data/catalog';
 
 type Sort = 'criticality' | 'name' | 'dependants' | 'dependencies';
@@ -37,6 +39,7 @@ export function CatalogView({
   onOpen: (id: string) => void;
 }) {
   const [sort, setSort] = useState<Sort>('criticality');
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   const results = useMemo(() => {
     const filtered = index.services.filter((s) => matchesFilters(s, filters) && matchesQuery(s, query));
@@ -81,6 +84,10 @@ export function CatalogView({
               </button>
             ))}
           </div>
+          <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export current results as CSV">
+            <TableIcon width={15} height={15} />
+            <span>CSV</span>
+          </button>
         </div>
 
         {results.length === 0 ? (
@@ -105,6 +112,15 @@ export function CatalogView({
           </div>
         )}
       </div>
+      {exportingCsv && (
+        <CsvExport
+          index={index}
+          services={results}
+          title="Export catalog results as CSV"
+          filename="service-catalog.csv"
+          onClose={() => setExportingCsv(false)}
+        />
+      )}
     </div>
   );
 }

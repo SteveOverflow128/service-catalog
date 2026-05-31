@@ -28,6 +28,15 @@ export interface Dependency {
   supportsFeatures?: string[];
 }
 
+export interface ExcludedDependency {
+  serviceId: string;
+  interaction: Interaction;
+  purpose: string;
+  external: boolean;
+  endpoint?: string;
+  exclusionReason: string;
+}
+
 export interface AwsService {
   type: string;
   purpose: string;
@@ -69,10 +78,14 @@ export interface Service {
   financeProduct?: string;
   train?: string;
   dataClassification: DataClassification;
+  catalogGroup?: string;
+  drStrategy?: string;
+  processingModesSupported?: string[];
   awsServices?: AwsService[];
   datastores?: Datastore[];
   features?: Feature[];
   dependencies?: Dependency[];
+  excludedDependencies?: ExcludedDependency[];
   tags?: Record<string, string>;
   _source?: string;
 }
