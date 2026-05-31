@@ -59,6 +59,13 @@ def test_bad_dr_strategy_enum_returns_error(schema):
     assert any("drStrategy" in e for e in errors)
 
 
+def test_bad_top_level_dr_strategy_enum_returns_error(schema):
+    """Top-level drStrategy has a different enum from awsServices[].drStrategy."""
+    data = load_invalid("bad-top-level-dr-strategy-enum.json")
+    errors = check_against_schema(data, schema)
+    assert any("drStrategy" in e for e in errors)
+
+
 def test_bad_data_classification_enum_returns_error(schema):
     data = load_invalid("bad-data-classification-enum.json")
     errors = check_against_schema(data, schema)

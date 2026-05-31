@@ -19,6 +19,9 @@
 
   "dataClassification": "CONFIDENTIAL",
 
+  "catalogGroup": "Workflow Platform",
+  "drStrategy": "activePassiveWarm",
+
   "awsServices": [
     { "type": "rds", "purpose": "Primary OLTP store for tasks and assignments", "engine": "postgres", "version": "16.2", "drStrategy": "startRestoreFromBackup" },
     { "type": "sqs", "purpose": "Async task-event queue for notifications", "drStrategy": "startEmpty" },
@@ -59,6 +62,17 @@
       "critical": false,
       "purpose": "Nightly usage export drop for the finance team",
       "external": false
+    }
+  ],
+
+  "excludedDependencies": [
+    {
+      "serviceId": "legacy-billing-service",
+      "interaction": "sync-http",
+      "purpose": "Historical billing data lookup",
+      "external": false,
+      "endpoint": "https://legacy-billing.internal/v1",
+      "exclusionReason": "Decommissioned — data migrated to billing-service as of Q1 2025"
     }
   ],
 

@@ -110,6 +110,30 @@
       }
     },
 
+    "catalogGroup": { "type": "string" },
+    "processingModesSupported": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+
+    "drStrategy": {
+      "enum": ["none", "activeActive", "activePassiveCold", "activePassiveWarm", "activePassiveHot", "unknown"]
+    },
+
+    "excludedDependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["serviceId", "interaction", "purpose", "external", "exclusionReason"],
+        "properties": {
+          "serviceId":       { "type": "string", "minLength": 1 },
+          "interaction":     { "enum": ["sync-http", "async-http", "async-event", "sftp", "batch", "fdw", "dms", "s3", "infrastructure", "grpc", "soap"] },
+          "purpose":         { "type": "string", "minLength": 1 },
+          "external":        { "type": "boolean" },
+          "endpoint":        { "type": "string" },
+          "exclusionReason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
     "tags": {
       "type": "object",
       "additionalProperties": { "type": "string" }
