@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { interactionStyle, tierStyle } from '../design/tokens';
@@ -6,6 +6,7 @@ import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from '.
 import {
   ArrowRight,
   CheckIcon,
+  CloseIcon,
   CloudIcon,
   DatabaseIcon,
   ExternalIcon,
@@ -13,6 +14,19 @@ import {
   ShieldIcon,
   WarnIcon,
 } from './icons';
+
+/** Today's date as YYYY-MM-DD in local time. */
+function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Strip the scanner-injected `_source` field before sending a service back. */
+function withoutSource(service: Service): Omit<Service, '_source'> {
+  const { _source, ...rest } = service as Service & { _source?: string };
+  void _source;
+  return rest;
+}
 
 // ---- Shared sub-components -----------------------------------------------
 
@@ -125,11 +139,7 @@ function DepRow({
 // ---- JSON Editor ---------------------------------------------------------
 
 function JsonEditor({ service }: { service: Service }) {
-  const clean = useMemo(() => {
-    const { _source, ...rest } = service as Service & { _source?: string };
-    void _source;
-    return JSON.stringify(rest, null, 2);
-  }, [service]);
+  const clean = useMemo(() => JSON.stringify(withoutSource(service), null, 2), [service]);
 
   const [text, setText] = useState(clean);
   const [syntaxError, setSyntaxError] = useState<string | null>(null);
@@ -153,11 +163,22 @@ function JsonEditor({ service }: { service: Service }) {
     if (syntaxError) return;
     setSaving(true);
     setSchemaErrors([]);
+    // Editing a service stamps lastUpdatedDate to today; reflect it in the editor.
+    let body = text;
+    try {
+      const obj = JSON.parse(text) as Record<string, unknown>;
+      obj.lastUpdatedDate = todayISO();
+      body = JSON.stringify(obj, null, 2);
+      setText(body);
+    } catch {
+      setSaving(false);
+      return; // the syntaxError guard should keep us from reaching here
+    }
     try {
       const res = await fetch(`/api/services/${service.serviceId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: text,
+        body,
       });
       const data = (await res.json()) as { ok: boolean; errors?: string[] };
       if (data.ok) {
@@ -209,6 +230,109 @@ function JsonEditor({ service }: { service: Service }) {
   );
 }
 
+// ---- Verify (sign-off) dialog --------------------------------------------
+
+/** Captures a userId and stamps verifiedBy + verificationDate (today) onto the
+ *  service — WITHOUT touching lastUpdatedDate. Writes via the dev save endpoint;
+ *  the resulting data/ change triggers a live reload that refreshes the badge. */
+function VerifyDialog({ service, onClose }: { service: Service; onClose: () => void }) {
+  const today = todayISO();
+  const [userId, setUserId] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+  const [errors, setErrors] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const signOff = async () => {
+    const uid = userId.trim();
+    if (!uid || saving || done) return;
+    setSaving(true);
+    setErrors(null);
+    // Note: lastUpdatedDate is intentionally left as-is — sign-off is an
+    // attestation of the existing record, not an edit to it.
+    const payload = { ...withoutSource(service), verifiedBy: uid, verificationDate: today };
+    try {
+      const res = await fetch(`/api/services/${service.serviceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload, null, 2),
+      });
+      const data = (await res.json()) as { ok: boolean; errors?: string[] };
+      if (data.ok) setDone(true);
+      else setErrors(data.errors ?? ['Unknown validation error']);
+    } catch {
+      setErrors(['Network error — is the dev server running?']);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="verify-title">
+      <div className="modal modal--narrow" onClick={(e) => e.stopPropagation()}>
+        <header className="modal__head">
+          <div>
+            <span className="overline">Attestation</span>
+            <h3 className="modal__title h-display" id="verify-title">Verify {service.name}</h3>
+          </div>
+          <button className="iconbtn" onClick={onClose} aria-label="Close">
+            <CloseIcon width={16} height={16} />
+          </button>
+        </header>
+
+        <div className="verify-body">
+          <label className="verify-field">
+            <span className="overline">Your user ID</span>
+            <input
+              className="verify-input mono"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') signOff(); }}
+              placeholder="e.g. jdoe"
+              autoFocus
+              spellCheck={false}
+              autoCapitalize="none"
+              autoCorrect="off"
+              disabled={done}
+            />
+          </label>
+          <p className="verify-note">
+            Records <code className="mono">verificationDate</code> = <span className="mono">{today}</span> and{' '}
+            <code className="mono">verifiedBy</code> = your user ID.{' '}
+            <code className="mono">lastUpdatedDate</code> is left unchanged.
+          </p>
+          {errors && (
+            <ul className="json-editor__errors">
+              {errors.map((e, i) => (
+                <li key={i} className="mono">{e}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <footer className="modal__foot">
+          <span className="modal__hint mono">{done ? '✓ signed off' : `verificationDate ← ${today}`}</span>
+          <div className="modal__actions">
+            <button className="btn" onClick={onClose}>{done ? 'Close' : 'Cancel'}</button>
+            <button
+              className={`btn btn--primary${done ? ' btn--ok' : ''}`}
+              onClick={signOff}
+              disabled={!userId.trim() || saving || done}
+            >
+              {done && <CheckIcon width={14} height={14} />}
+              {done ? 'Signed off' : saving ? 'Signing…' : 'Sign off'}
+            </button>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 // ---- Full detail page ----------------------------------------------------
 
 export function ServiceDetailPage({
@@ -225,6 +349,7 @@ export function ServiceDetailPage({
   onSelectNode: (id: string) => void;
 }) {
   const [jsonOpen, setJsonOpen] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const jsonRef = useRef<HTMLDivElement>(null);
 
   const openEditor = () => {
@@ -251,11 +376,17 @@ export function ServiceDetailPage({
             Map View
             <ArrowRight width={13} height={13} />
           </button>
+          <button className="btn" onClick={() => setVerifyOpen(true)}>
+            <CheckIcon width={14} height={14} />
+            Verify
+          </button>
           <button className="btn btn--primary" onClick={openEditor}>
             Edit JSON
           </button>
         </div>
       </div>
+
+      {verifyOpen && <VerifyDialog service={service} onClose={() => setVerifyOpen(false)} />}
 
       {/* ── Body ── */}
       <div className="svc-page__body scrolly">

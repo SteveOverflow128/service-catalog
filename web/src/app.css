@@ -1293,6 +1293,42 @@ code.mono {
 .modal--wide {
   width: min(1040px, 100%);
 }
+.modal--narrow {
+  width: min(440px, 100%);
+}
+.verify-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+}
+.verify-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.verify-input {
+  padding: 10px 12px;
+  background: var(--ink);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-md);
+  color: var(--text-hi);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.16s;
+}
+.verify-input:focus {
+  border-color: var(--accent);
+}
+.verify-input::placeholder {
+  color: var(--text-faint);
+}
+.verify-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-lo);
+}
 .modal__head {
   display: flex;
   align-items: flex-start;
