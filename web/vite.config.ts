@@ -2,6 +2,7 @@ import { defineConfig, type Connect, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFile, writeFile } from 'node:fs/promises';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import { scanCatalog, DATA_DIR, REPO_ROOT } from './scripts/scan-catalog.mjs';
 import { resolve } from 'node:path';
 
@@ -99,7 +100,10 @@ function saveService(): Plugin {
           return;
         }
 
+        // ajv v8 ships no formats of its own; register ajv-formats so `uri`,
+        // `email`, and `date` are actually validated on save instead of skipped.
         const ajv = new Ajv({ strict: false, validateSchema: false, allErrors: true });
+        addFormats(ajv);
         const validate = ajv.compile(schema);
         if (!validate(parsed)) {
           const errors = (validate.errors ?? []).map((e) => {

@@ -11,6 +11,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '..', '..');
@@ -19,15 +20,15 @@ export const SCHEMA_PATH = resolve(REPO_ROOT, 'schema', 'service-catalog.schema.
 
 // Compile the catalog schema once and reuse it. Mirrors the ajv config the dev
 // save endpoint uses (vite.config.ts) so the read and write paths agree on what
-// "valid" means. strict:false because the schema is draft-2020-12 and uses
-// `format` keywords we treat as advisory (matching the Python validator).
+// "valid" means.
 let _validateSchema = null;
 async function getSchemaValidator() {
   if (_validateSchema) return _validateSchema;
   const schema = JSON.parse(await readFile(SCHEMA_PATH, 'utf8'));
-  // logger:false silences ajv's "unknown format ... ignored" notices — `format`
-  // keywords are intentionally advisory here, as in the Python validator.
-  const ajv = new Ajv({ strict: false, validateSchema: false, allErrors: true, logger: false });
+  // ajv v8 ships no formats of its own; register ajv-formats so `uri`, `email`,
+  // and `date` are actually validated instead of skipped with a console warning.
+  const ajv = new Ajv({ strict: false, validateSchema: false, allErrors: true });
+  addFormats(ajv);
   _validateSchema = ajv.compile(schema);
   return _validateSchema;
 }
