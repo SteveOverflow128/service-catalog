@@ -9,13 +9,17 @@ import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
 import { CodeIcon, TableIcon } from './icons';
 
-type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'awsService.type';
+type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'awsService.type' | 'criticalityTier' | 'team';
+
+const DIM_ORDER: GroupByDim[] = ['train', 'catalogGroup', 'product', 'team', 'criticalityTier', 'awsService.type'];
 
 const DIM_LABELS: Record<GroupByDim, string> = {
-  product: 'Product',
-  catalogGroup: 'Catalog Group',
   train: 'Train',
-  'awsService.type': 'AWS Service Type',
+  catalogGroup: 'Catalog Group',
+  product: 'Product',
+  team: 'Team',
+  criticalityTier: 'Criticality Tier',
+  'awsService.type': 'AWS Service',
 };
 
 function getDimValues(services: Service[], dim: GroupByDim): string[] {
@@ -24,6 +28,8 @@ function getDimValues(services: Service[], dim: GroupByDim): string[] {
     if (dim === 'product' && s.product) vals.add(s.product);
     else if (dim === 'catalogGroup' && s.catalogGroup) vals.add(s.catalogGroup);
     else if (dim === 'train' && s.train) vals.add(s.train);
+    else if (dim === 'criticalityTier') vals.add(String(s.criticalityTier));
+    else if (dim === 'team' && s.team) vals.add(s.team);
     else if (dim === 'awsService.type') {
       for (const a of s.awsServices ?? []) vals.add(a.type);
     }
@@ -36,6 +42,8 @@ function filterByDim(services: Service[], dim: GroupByDim, value: string): Servi
     if (dim === 'product') return s.product === value;
     if (dim === 'catalogGroup') return s.catalogGroup === value;
     if (dim === 'train') return s.train === value;
+    if (dim === 'criticalityTier') return String(s.criticalityTier) === value;
+    if (dim === 'team') return s.team === value;
     if (dim === 'awsService.type') return (s.awsServices ?? []).some((a) => a.type === value);
     return false;
   });
@@ -143,7 +151,7 @@ export function MeshView({
           <div className="mesh__exports">
             <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export as CSV">
               <TableIcon width={15} height={15} />
-              <span>CSV</span>
+              <span>Export CSV</span>
             </button>
             <button className="exportbtn" onClick={() => setExporting(true)} title="Export as Mermaid diagram">
               <CodeIcon width={15} height={15} />
@@ -161,7 +169,7 @@ export function MeshView({
           onChange={(e) => handleDimChange((e.target.value as GroupByDim) || null)}
         >
           <option value="">— All services —</option>
-          {(Object.keys(DIM_LABELS) as GroupByDim[]).map((d) => (
+          {DIM_ORDER.map((d) => (
             <option key={d} value={d}>{DIM_LABELS[d]}</option>
           ))}
         </select>

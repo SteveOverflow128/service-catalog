@@ -117,7 +117,7 @@ export function DependencyMap({
             title="Export the services in this map as a CSV"
           >
             <TableIcon width={15} height={15} />
-            <span>CSV</span>
+            <span>Export CSV</span>
           </button>
           <button className="exportbtn" onClick={() => setExporting(true)} title="Export this map as a Mermaid diagram">
             <CodeIcon width={15} height={15} />

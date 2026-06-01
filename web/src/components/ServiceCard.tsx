@@ -8,11 +8,13 @@ export function ServiceCard({
   service,
   index,
   onOpen,
+  onMapView,
   style,
 }: {
   service: Service;
   index: CatalogIndex;
   onOpen: (id: string) => void;
+  onMapView: (id: string) => void;
   style?: React.CSSProperties;
 }) {
   const depCount = service.dependencies?.length ?? 0;
@@ -22,10 +24,13 @@ export function ServiceCard({
   const sensitive = service.dataClassification === 'RESTRICTED';
 
   return (
-    <button
+    <div
       className="svc-card"
       style={{ ...style, ['--tier' as string]: tier.color, ['--glow' as string]: tier.glow }}
+      role="button"
+      tabIndex={0}
       onClick={() => onOpen(service.serviceId)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(service.serviceId); }}
     >
       <span className="svc-card__edge" />
       <div className="svc-card__top">
@@ -58,10 +63,15 @@ export function ServiceCard({
         <span className="depstat depstat--in">
           <b className="mono">{dependantCount}</b> dependants
         </span>
-        <span className="svc-card__open">
+        <button
+          className="svc-card__open"
+          onClick={(e) => { e.stopPropagation(); onMapView(service.serviceId); }}
+          tabIndex={0}
+          aria-label={`View ${service.name} in mesh`}
+        >
           map <ArrowRight width={13} height={13} />
-        </span>
+        </button>
       </div>
-    </button>
+    </div>
   );
 }

@@ -51,7 +51,13 @@
           "instanceType": { "type": "string" },
           "drStrategy": {
             "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive", "unknown"]
-          }
+          },
+          "minReplicas":    { "type": "integer", "minimum": 0 },
+          "maxReplicas":    { "type": "integer", "minimum": 0 },
+          "cpuRequest":     { "type": "string" },
+          "memoryRequest":  { "type": "string" },
+          "cpuLimit":       { "type": "string" },
+          "memoryLimit":    { "type": "string" }
         }
       }
     },
@@ -61,7 +67,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "type", "restrictedData", "critical", "retention"],
+        "required": ["name", "type", "restrictedData", "critical"],
         "properties": {
           "name":           { "type": "string", "minLength": 1 },
           "type":           { "type": "string", "minLength": 1 },
@@ -71,6 +77,11 @@
             "type": "string",
             "description": "ISO 8601 duration. Examples: P7Y, P90D, PT24H, P0D.",
             "pattern": "^P(?=.)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+          },
+          "engine":     { "type": "string" },
+          "version":    { "type": "string" },
+          "drStrategy": {
+            "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive", "unknown"]
           }
         }
       }

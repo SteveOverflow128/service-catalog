@@ -92,10 +92,12 @@ export function ServiceDetail({
   index,
   service,
   onSelectNode,
+  onOpenDetail,
 }: {
   index: CatalogIndex;
   service: Service;
   onSelectNode: (id: string) => void;
+  onOpenDetail?: (id: string) => void;
 }) {
   const deps = service.dependencies ?? [];
   const dependants = index.dependantsOf(service.serviceId);
@@ -111,7 +113,13 @@ export function ServiceDetail({
           <ClassificationBadge value={service.dataClassification} />
         </div>
         <h1 className="detail-panel__name h-display">{service.name}</h1>
-        <code className="detail-panel__id mono">{service.serviceId}</code>
+        <code
+          className={`detail-panel__id mono${onOpenDetail ? ' detail-panel__id--link' : ''}`}
+          onClick={() => onOpenDetail?.(service.serviceId)}
+          title={onOpenDetail ? 'Open full detail page' : undefined}
+        >
+          {service.serviceId}
+        </code>
         {service.description && <p className="detail-panel__desc">{service.description}</p>}
 
         {(restricted || phi) && (
@@ -141,6 +149,8 @@ export function ServiceDetail({
           <KV k="Value Stream" v={service.valueStream} />
           <KV k="Train" v={service.train} />
           <KV k="Finance Product" v={service.financeProduct} />
+          <KV k="Catalog Group" v={service.catalogGroup} />
+          <KV k="DR Strategy" v={service.drStrategy} mono />
         </div>
       </Section>
 

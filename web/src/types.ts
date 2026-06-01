@@ -44,6 +44,12 @@ export interface AwsService {
   version?: string;
   instanceType?: string;
   drStrategy?: string;
+  minReplicas?: number;
+  maxReplicas?: number;
+  cpuRequest?: string;
+  memoryRequest?: string;
+  cpuLimit?: string;
+  memoryLimit?: string;
 }
 
 export interface Datastore {
@@ -51,7 +57,7 @@ export interface Datastore {
   type: string;
   restrictedData: boolean;
   critical: boolean;
-  retention: string;
+  retention?: string;
   engine?: string;
   version?: string;
   drStrategy?: string;

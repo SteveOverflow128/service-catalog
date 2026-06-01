@@ -1,0 +1,435 @@
+import { useRef, useMemo, useState } from 'react';
+import type { CatalogIndex } from '../data/catalog';
+import type { Service } from '../types';
+import { interactionStyle, tierStyle } from '../design/tokens';
+import { ClassificationBadge, LifecycleBadge, TierBadge } from './Badges';
+import {
+  ArrowRight,
+  CheckIcon,
+  CloudIcon,
+  DatabaseIcon,
+  ExternalIcon,
+  LayersIcon,
+  ShieldIcon,
+  WarnIcon,
+} from './icons';
+
+// ---- Shared sub-components -----------------------------------------------
+
+function KV({ k, v, mono }: { k: string; v?: React.ReactNode; mono?: boolean }) {
+  if (v === undefined || v === null || v === '') return null;
+  return (
+    <div className="kv">
+      <span className="kv__k">{k}</span>
+      <span className={`kv__v${mono ? ' mono' : ''}`}>{v}</span>
+    </div>
+  );
+}
+
+function Section({
+  label,
+  count,
+  icon,
+  children,
+}: {
+  label: string;
+  count?: number;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="metablock">
+      <header className="metablock__head">
+        {icon}
+        <span className="overline">{label}</span>
+        {count !== undefined && <span className="metablock__count mono">{count}</span>}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function DepRow({
+  index,
+  targetId,
+  interaction,
+  critical,
+  external,
+  purpose,
+  direction,
+  onSelect,
+}: {
+  index: CatalogIndex;
+  targetId: string;
+  interaction: string;
+  critical: boolean;
+  external: boolean;
+  purpose?: string;
+  direction: 'out' | 'in';
+  onSelect: (id: string) => void;
+}) {
+  const svc = index.byId.get(targetId);
+  const label = svc?.name ?? index.externals.get(targetId)?.name ?? targetId;
+  const tier = svc ? tierStyle(svc.criticalityTier) : null;
+  const clickable = !!svc;
+  return (
+    <button
+      className={`deprow${clickable ? '' : ' deprow--ext'}`}
+      onClick={() => clickable && onSelect(targetId)}
+      disabled={!clickable}
+      title={purpose}
+    >
+      <span className="deprow__dir mono">{direction === 'out' ? '→' : '←'}</span>
+      <span className="deprow__dot" style={{ background: tier ? tier.color : 'var(--accent)' }} />
+      <span className="deprow__name">
+        {label}
+        {external && <ExternalIcon width={12} height={12} className="deprow__extico" />}
+      </span>
+      <span className="deprow__interaction mono">{interactionStyle(interaction).label}</span>
+      {critical && <span className="deprow__crit mono">CRIT</span>}
+      {clickable && <ArrowRight width={13} height={13} className="deprow__go" />}
+    </button>
+  );
+}
+
+// ---- JSON Editor ---------------------------------------------------------
+
+function JsonEditor({ service }: { service: Service }) {
+  const clean = useMemo(() => {
+    const { _source, ...rest } = service as Service & { _source?: string };
+    void _source;
+    return JSON.stringify(rest, null, 2);
+  }, [service]);
+
+  const [text, setText] = useState(clean);
+  const [syntaxError, setSyntaxError] = useState<string | null>(null);
+  const [schemaErrors, setSchemaErrors] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setText(val);
+    setSchemaErrors([]);
+    try {
+      JSON.parse(val);
+      setSyntaxError(null);
+    } catch (err) {
+      setSyntaxError((err as Error).message);
+    }
+  };
+
+  const save = async () => {
+    if (syntaxError) return;
+    setSaving(true);
+    setSchemaErrors([]);
+    try {
+      const res = await fetch(`/api/services/${service.serviceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: text,
+      });
+      const data = (await res.json()) as { ok: boolean; errors?: string[] };
+      if (data.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        setSchemaErrors(data.errors ?? ['Unknown validation error']);
+      }
+    } catch {
+      setSchemaErrors(['Network error — is the dev server running?']);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="json-editor">
+      <div className="json-editor__wrap">
+        <textarea
+          className={`json-editor__ta mono${syntaxError ? ' json-editor__ta--err' : ''}`}
+          value={text}
+          onChange={handleChange}
+          spellCheck={false}
+          autoCapitalize="none"
+          autoCorrect="off"
+        />
+        {syntaxError && <p className="json-editor__syntax mono">{syntaxError}</p>}
+      </div>
+      {schemaErrors.length > 0 && (
+        <ul className="json-editor__errors">
+          {schemaErrors.map((e, i) => (
+            <li key={i} className="mono">{e}</li>
+          ))}
+        </ul>
+      )}
+      <div className="json-editor__foot">
+        <span className="json-editor__hint overline">
+          {saved ? '✓ saved' : syntaxError ? 'fix syntax errors first' : `${text.split('\n').length} lines`}
+        </span>
+        <button
+          className={`btn btn--primary${saved ? ' btn--ok' : ''}`}
+          onClick={save}
+          disabled={!!syntaxError || saving}
+        >
+          {saved && <CheckIcon width={14} height={14} />}
+          {saved ? 'Saved!' : saving ? 'Saving…' : 'Validate & Save'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---- Full detail page ----------------------------------------------------
+
+export function ServiceDetailPage({
+  service,
+  index,
+  onBack,
+  onOpenMap,
+  onSelectNode,
+}: {
+  service: Service;
+  index: CatalogIndex;
+  onBack: () => void;
+  onOpenMap: (id: string) => void;
+  onSelectNode: (id: string) => void;
+}) {
+  const [jsonOpen, setJsonOpen] = useState(false);
+  const jsonRef = useRef<HTMLDivElement>(null);
+
+  const openEditor = () => {
+    setJsonOpen(true);
+    setTimeout(() => jsonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
+
+  const deps = service.dependencies ?? [];
+  const dependants = index.dependantsOf(service.serviceId);
+  const restricted = service.dataClassification === 'RESTRICTED' || service.dataClassification === 'CONFIDENTIAL';
+  const phi = service.tags?.phi === 'true';
+
+  return (
+    <div className="svc-page">
+      {/* ── Bar ── */}
+      <div className="detail__bar">
+        <button className="backbtn" onClick={onBack}>
+          <ArrowRight width={14} height={14} className="backbtn__ico" />
+          <span>Catalog</span>
+        </button>
+        <span className="detail__crumb mono">/ {service.serviceId}</span>
+        <div className="svc-page__bar-actions">
+          <button className="btn" onClick={() => onOpenMap(service.serviceId)}>
+            Map View
+            <ArrowRight width={13} height={13} />
+          </button>
+          <button className="btn btn--primary" onClick={openEditor}>
+            Edit JSON
+          </button>
+        </div>
+      </div>
+
+      {/* ── Body ── */}
+      <div className="svc-page__body scrolly">
+        <div className="svc-page__inner">
+
+          {/* Hero */}
+          <div className="svc-page__hero">
+            <div className="svc-page__badges">
+              <TierBadge tier={service.criticalityTier} />
+              <LifecycleBadge lifecycle={service.lifecycle} />
+              <ClassificationBadge value={service.dataClassification} />
+            </div>
+            <h1 className="svc-page__name h-display">{service.name}</h1>
+            <code className="svc-page__id mono">{service.serviceId}</code>
+            {service.description && <p className="svc-page__desc">{service.description}</p>}
+            {(restricted || phi) && (
+              <div className="sensbar">
+                <ShieldIcon width={14} height={14} />
+                {phi ? 'Handles PHI' : 'Sensitive data'} · {service.dataClassification}
+              </div>
+            )}
+            <div className="svc-page__stats">
+              <div className="svc-page__stat">
+                <span className="svc-page__stat-n mono">{deps.length}</span>
+                <span className="svc-page__stat-l">dependencies</span>
+              </div>
+              <div className="svc-page__stat svc-page__stat--in">
+                <span className="svc-page__stat-n mono">{dependants.length}</span>
+                <span className="svc-page__stat-l">dependants</span>
+              </div>
+              {(service.datastores?.length ?? 0) > 0 && (
+                <div className="svc-page__stat">
+                  <span className="svc-page__stat-n mono">{service.datastores!.length}</span>
+                  <span className="svc-page__stat-l">datastores</span>
+                </div>
+              )}
+              {(service.awsServices?.length ?? 0) > 0 && (
+                <div className="svc-page__stat">
+                  <span className="svc-page__stat-n mono">{service.awsServices!.length}</span>
+                  <span className="svc-page__stat-l">AWS services</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Two-column metadata */}
+          <div className="svc-page__twocol">
+            <div>
+              <Section label="Ownership">
+                <div className="kvgrid">
+                  <KV k="Team" v={service.team} />
+                  <KV k="Contact" v={<a href={`mailto:${service.teamEmail}`}>{service.teamEmail}</a>} mono />
+                  <KV k="Product" v={service.product} />
+                  <KV k="Value Stream" v={service.valueStream} />
+                  <KV k="Train" v={service.train} />
+                  <KV k="Finance Product" v={service.financeProduct} />
+                  <KV k="Catalog Group" v={service.catalogGroup} />
+                  <KV k="DR Strategy" v={service.drStrategy} mono />
+                </div>
+              </Section>
+              <Section label="Runtime">
+                <div className="kvgrid">
+                  <KV k="Runtime" v={service.runtime} mono />
+                  <KV k="Framework" v={service.softwareFramework} mono />
+                  <KV
+                    k="Repository"
+                    v={
+                      service.repository ? (
+                        <a href={service.repository} target="_blank" rel="noreferrer">
+                          {service.repository.replace(/^https?:\/\//, '')}
+                        </a>
+                      ) : undefined
+                    }
+                    mono
+                  />
+                </div>
+              </Section>
+            </div>
+
+            <div>
+              {deps.length > 0 && (
+                <Section label="Depends on" count={deps.length} icon={<ArrowRight width={13} height={13} />}>
+                  <div className="deplist">
+                    {deps.map((d, i) => (
+                      <DepRow
+                        key={`${d.serviceId}-${i}`}
+                        index={index}
+                        targetId={d.serviceId}
+                        interaction={d.interaction}
+                        critical={d.critical}
+                        external={d.external}
+                        purpose={d.purpose}
+                        direction="out"
+                        onSelect={onSelectNode}
+                      />
+                    ))}
+                  </div>
+                </Section>
+              )}
+              {dependants.length > 0 && (
+                <Section label="Depended on by" count={dependants.length}>
+                  <div className="deplist">
+                    {dependants.map((e, i) => (
+                      <DepRow
+                        key={`${e.from}-${i}`}
+                        index={index}
+                        targetId={e.from}
+                        interaction={e.dep.interaction}
+                        critical={e.dep.critical}
+                        external={false}
+                        purpose={e.dep.purpose}
+                        direction="in"
+                        onSelect={onSelectNode}
+                      />
+                    ))}
+                  </div>
+                </Section>
+              )}
+            </div>
+          </div>
+
+          {/* Full-width sections */}
+          {service.datastores && service.datastores.length > 0 && (
+            <Section label="Datastores" count={service.datastores.length} icon={<DatabaseIcon width={13} height={13} />}>
+              <div className="svc-page__cardgrid">
+                {service.datastores.map((d, i) => (
+                  <div className="ministore" key={i}>
+                    <div className="ministore__top">
+                      <span className="mono ministore__name">{d.name}</span>
+                      <span className="tag tag--type mono">{d.type}</span>
+                    </div>
+                    <div className="ministore__meta mono">
+                      {d.engine && <span>{d.engine}{d.version ? ` ${d.version}` : ''}</span>}
+                      <span>retain {d.retention}</span>
+                      {d.critical && <span className="tag tag--crit">critical</span>}
+                      {d.restrictedData && (
+                        <span className="tag tag--restricted">
+                          <WarnIcon width={11} height={11} /> restricted
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {service.awsServices && service.awsServices.length > 0 && (
+            <Section label="AWS Services" count={service.awsServices.length} icon={<CloudIcon width={13} height={13} />}>
+              <div className="svc-page__cardgrid">
+                {service.awsServices.map((a, i) => (
+                  <div className="ministore" key={i}>
+                    <div className="ministore__top">
+                      <span className="mono ministore__name">{a.type}</span>
+                      {a.drStrategy && <span className="tag tag--type mono">{a.drStrategy}</span>}
+                    </div>
+                    <div className="ministore__meta">{a.purpose}</div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {service.features && service.features.length > 0 && (
+            <Section label="Features" count={service.features.length} icon={<LayersIcon width={13} height={13} />}>
+              <div className="chiprow">
+                {service.features.map((f, i) => (
+                  <span className="chip mono" key={i} title={f.description}>{f.name}</span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {service.tags && Object.keys(service.tags).length > 0 && (
+            <Section label="Tags">
+              <div className="chiprow">
+                {Object.entries(service.tags).map(([k, v]) => (
+                  <span className="chip chip--tag mono" key={k}>
+                    <span className="chip__k">{k}</span>
+                    {v}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* JSON Editor accordion */}
+          <div className="json-accordion" ref={jsonRef}>
+            <button
+              className={`json-accordion__head${jsonOpen ? ' json-accordion__head--open' : ''}`}
+              onClick={() => setJsonOpen((o) => !o)}
+            >
+              <span className="overline">Edit JSON</span>
+              <span className="json-accordion__chev mono">{jsonOpen ? '–' : '+'}</span>
+            </button>
+            {jsonOpen && (
+              <div className="json-accordion__body">
+                <JsonEditor service={service} />
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}

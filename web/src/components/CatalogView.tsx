@@ -29,6 +29,7 @@ export function CatalogView({
   onToggle,
   onClear,
   onOpen,
+  onMapView,
 }: {
   index: CatalogIndex;
   facets: Facets;
@@ -37,6 +38,7 @@ export function CatalogView({
   onToggle: (group: keyof FilterState, value: string) => void;
   onClear: () => void;
   onOpen: (id: string) => void;
+  onMapView: (id: string) => void;
 }) {
   const [sort, setSort] = useState<Sort>('criticality');
   const [exportingCsv, setExportingCsv] = useState(false);
@@ -86,7 +88,7 @@ export function CatalogView({
           </div>
           <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export current results as CSV">
             <TableIcon width={15} height={15} />
-            <span>CSV</span>
+            <span>Export CSV</span>
           </button>
         </div>
 
@@ -106,6 +108,7 @@ export function CatalogView({
                 service={s}
                 index={index}
                 onOpen={onOpen}
+                onMapView={onMapView}
                 style={{ animationDelay: `${Math.min(i * 24, 480)}ms` }}
               />
             ))}

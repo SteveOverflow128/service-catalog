@@ -15,8 +15,16 @@ export interface CsvField {
 
 const LIST_SEP = '; ';
 
-/** First RDS entry in the service's awsServices (case-insensitive type match). */
-const rdsAws = (s: Service) => (s.awsServices ?? []).find((a) => a.type.toUpperCase() === 'RDS');
+/** First entry of a given type in awsServices (case-insensitive). */
+const findAws = (s: Service, t: string) =>
+  (s.awsServices ?? []).find((a) => a.type.toUpperCase() === t.toUpperCase());
+const rdsAws = (s: Service) => findAws(s, 'RDS');
+
+/** First awsService entry that carries workload sizing fields. */
+const workloadAws = (s: Service) =>
+  (s.awsServices ?? []).find(
+    (a) => a.minReplicas != null || a.maxReplicas != null || a.cpuRequest != null || a.memoryRequest != null,
+  );
 
 export const CSV_FIELDS: CsvField[] = [
   { key: 'serviceId', default: true, value: (s) => s.serviceId },
@@ -42,6 +50,90 @@ export const CSV_FIELDS: CsvField[] = [
     value: (s, index) => [...new Set(index.dependantsOf(s.serviceId).map((e) => e.from))].sort().join(LIST_SEP),
   },
   // Off by default:
+  { key: 'name', default: false, value: (s) => s.name },
+  { key: 'lifecycle', default: false, value: (s) => s.lifecycle },
+  { key: 'description', default: false, value: (s) => s.description ?? '' },
+  { key: 'repository', default: false, value: (s) => s.repository },
+  { key: 'runtime', default: false, value: (s) => s.runtime ?? '' },
+  { key: 'softwareFramework', default: false, value: (s) => s.softwareFramework ?? '' },
+  { key: 'dataClassification', default: false, value: (s) => s.dataClassification },
+  { key: 'financeProduct', default: false, value: (s) => s.financeProduct ?? '' },
+  { key: 'drStrategy', default: false, hint: 'top-level service DR posture', value: (s) => s.drStrategy ?? '' },
+  {
+    key: 'processingModesSupported',
+    default: false,
+    list: true,
+    value: (s) => (s.processingModesSupported ?? []).join(LIST_SEP),
+  },
+  {
+    key: 'dependencies.count',
+    default: false,
+    hint: 'number of outbound dependencies',
+    value: (s) => String(s.dependencies?.length ?? 0),
+  },
+  {
+    key: 'dependencies',
+    default: false,
+    list: true,
+    hint: 'serviceIds this service depends on',
+    value: (s) => (s.dependencies ?? []).map((d) => d.serviceId).join(LIST_SEP),
+  },
+  {
+    key: 'excludedDependencies.count',
+    default: false,
+    hint: 'number of excluded dependencies',
+    value: (s) => String(s.excludedDependencies?.length ?? 0),
+  },
+  {
+    key: 'awsServices.drStrategy',
+    default: false,
+    list: true,
+    hint: 'DR strategies across all AWS services',
+    value: (s) => (s.awsServices ?? []).map((a) => a.drStrategy ?? '').filter(Boolean).join(LIST_SEP),
+  },
+  {
+    key: 'datastores',
+    default: false,
+    list: true,
+    hint: 'datastore names',
+    value: (s) => (s.datastores ?? []).map((d) => d.name).join(LIST_SEP),
+  },
+  {
+    key: 'minReplicas',
+    default: false,
+    hint: 'minimum replicas of the workload awsService, when present',
+    value: (s) => { const w = workloadAws(s); return w?.minReplicas != null ? String(w.minReplicas) : ''; },
+  },
+  {
+    key: 'maxReplicas',
+    default: false,
+    hint: 'maximum replicas of the workload awsService, when present',
+    value: (s) => { const w = workloadAws(s); return w?.maxReplicas != null ? String(w.maxReplicas) : ''; },
+  },
+  {
+    key: 'cpuRequest',
+    default: false,
+    hint: 'CPU request of the workload awsService, when present',
+    value: (s) => workloadAws(s)?.cpuRequest ?? '',
+  },
+  {
+    key: 'memoryRequest',
+    default: false,
+    hint: 'memory request of the workload awsService, when present',
+    value: (s) => workloadAws(s)?.memoryRequest ?? '',
+  },
+  {
+    key: 'cpuLimit',
+    default: false,
+    hint: 'CPU limit of the workload awsService, when present',
+    value: (s) => workloadAws(s)?.cpuLimit ?? '',
+  },
+  {
+    key: 'memoryLimit',
+    default: false,
+    hint: 'memory limit of the workload awsService, when present',
+    value: (s) => workloadAws(s)?.memoryLimit ?? '',
+  },
   {
     key: 'rdsEngine',
     default: false,
@@ -60,11 +152,6 @@ export const CSV_FIELDS: CsvField[] = [
     hint: 'instanceType of the RDS awsService, when present',
     value: (s) => rdsAws(s)?.instanceType ?? '',
   },
-  { key: 'name', default: false, value: (s) => s.name },
-  { key: 'runtime', default: false, value: (s) => s.runtime ?? '' },
-  { key: 'softwareFramework', default: false, value: (s) => s.softwareFramework ?? '' },
-  { key: 'dataClassification', default: false, value: (s) => s.dataClassification },
-  { key: 'financeProduct', default: false, value: (s) => s.financeProduct ?? '' },
 ];
 
 export const DEFAULT_CSV_FIELDS = CSV_FIELDS.filter((f) => f.default).map((f) => f.key);
