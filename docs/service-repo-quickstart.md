@@ -4,17 +4,16 @@ This guide walks a service owner through adopting the service catalog in their r
 
 ## 1. Drop a `service.json` at the repo root
 
-Copy `examples/service.minimal.json` from the catalog repo to your repo's root as `service.json` and fill in the nine required fields:
+Copy `examples/service.minimal.json` from the catalog repo to your repo's root as `service.json` and fill in the eight required fields:
 
 - `serviceId` — kebab-case, unique across the org (e.g., `task-service`)
 - `name` — human-readable display name
 - `team` — owning team's name
 - `teamEmail` — distribution list or shared inbox
 - `lifecycle` — one of `experimental`, `non-prod`, `prod`, `sunset`
-- `criticalityTier` — `0` (mission-critical; an outage halts the business) through `3` (internal only, non-critical)
+- `criticalityTier` — `0` (mission-critical; an outage halts the business) through `3` (internal only, non-critical), or `?` if not yet scored
 - `repository` — repo URL
-- `containsPHI` — boolean
-- `containsPII` — boolean
+- `dataClassification` — one of `PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, `RESTRICTED` (the most sensitive data the service handles)
 
 Then add optional sections (`awsServices`, `datastores`, `features`, `dependencies`, `tags`, etc.) as they apply. See `examples/service.example.json` for a full reference.
 

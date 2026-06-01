@@ -10,10 +10,27 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Ajv from 'ajv';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '..', '..');
 export const DATA_DIR = resolve(REPO_ROOT, 'data');
+export const SCHEMA_PATH = resolve(REPO_ROOT, 'schema', 'service-catalog.schema.json');
+
+// Compile the catalog schema once and reuse it. Mirrors the ajv config the dev
+// save endpoint uses (vite.config.ts) so the read and write paths agree on what
+// "valid" means. strict:false because the schema is draft-2020-12 and uses
+// `format` keywords we treat as advisory (matching the Python validator).
+let _validateSchema = null;
+async function getSchemaValidator() {
+  if (_validateSchema) return _validateSchema;
+  const schema = JSON.parse(await readFile(SCHEMA_PATH, 'utf8'));
+  // logger:false silences ajv's "unknown format ... ignored" notices — `format`
+  // keywords are intentionally advisory here, as in the Python validator.
+  const ajv = new Ajv({ strict: false, validateSchema: false, allErrors: true, logger: false });
+  _validateSchema = ajv.compile(schema);
+  return _validateSchema;
+}
 
 async function walk(dir) {
   const out = [];
@@ -37,6 +54,7 @@ export async function scanCatalog(dataDir = DATA_DIR) {
   const files = (await walk(dataDir)).sort();
   const services = [];
   const warnings = [];
+  const validateSchema = await getSchemaValidator();
 
   for (const file of files) {
     const rel = relative(REPO_ROOT, file);
@@ -55,6 +73,14 @@ export async function scanCatalog(dataDir = DATA_DIR) {
       warnings.push(`skip ${rel}: missing serviceId`);
       continue;
     }
+    // Validate against the catalog schema. Invalid entries are kept (the viewer
+    // degrades gracefully) but every violation is surfaced as a warning instead
+    // of being silently ingested.
+    if (!validateSchema(parsed)) {
+      for (const e of validateSchema.errors ?? []) {
+        warnings.push(`schema ${rel} ${e.instancePath || '(root)'}: ${e.message}`);
+      }
+    }
     services.push({ ...parsed, _source: rel });
   }
 
@@ -68,6 +94,20 @@ export async function scanCatalog(dataDir = DATA_DIR) {
     } else {
       seen.set(s.serviceId, s._source);
     }
+  }
+
+  // Dangling dependencies: an internal (external=false) dependency whose target
+  // serviceId isn't a known catalog entry — almost always a typo. external=true
+  // targets are third parties and are expected to be unresolved, so skip them.
+  for (const s of services) {
+    const deps = Array.isArray(s.dependencies) ? s.dependencies : [];
+    deps.forEach((dep, i) => {
+      if (dep && dep.external !== true && typeof dep.serviceId === 'string' && !seen.has(dep.serviceId)) {
+        warnings.push(
+          `dangling dependency ${s._source} dependencies/${i}: "${dep.serviceId}" is not a known service and external=false`,
+        );
+      }
+    });
   }
 
   const payload = {

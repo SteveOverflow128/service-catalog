@@ -1,7 +1,7 @@
 import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { interactionStyle, tierStyle } from '../design/tokens';
-import { ClassificationBadge, LifecycleBadge, TierBadge } from './Badges';
+import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
 import {
   ArrowRight,
   CloudIcon,
@@ -111,6 +111,7 @@ export function ServiceDetail({
           <TierBadge tier={service.criticalityTier} />
           <LifecycleBadge lifecycle={service.lifecycle} />
           <ClassificationBadge value={service.dataClassification} />
+          <VerifiedBadge verificationDate={service.verificationDate} />
         </div>
         <h1 className="detail-panel__name h-display">{service.name}</h1>
         <code

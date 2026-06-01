@@ -1,8 +1,16 @@
 import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { tierStyle } from '../design/tokens';
-import { ClassificationBadge, LifecycleBadge, TierBadge } from './Badges';
-import { ArrowRight, ShieldIcon } from './icons';
+import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
+import { ArrowRight } from './icons';
+
+/** "YYYY-MM-DD" → "MM-DD-YY", or "unknown" when absent/unparseable. */
+function fmtUpdated(date?: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date ?? '');
+  if (!m) return 'unknown';
+  const [, y, mo, d] = m;
+  return `${mo}-${d}-${y.slice(2)}`;
+}
 
 export function ServiceCard({
   service,
@@ -20,8 +28,6 @@ export function ServiceCard({
   const depCount = service.dependencies?.length ?? 0;
   const dependantCount = index.dependantCount(service.serviceId);
   const tier = tierStyle(service.criticalityTier);
-  const phi = service.tags?.phi === 'true';
-  const sensitive = service.dataClassification === 'RESTRICTED';
 
   return (
     <div
@@ -36,11 +42,7 @@ export function ServiceCard({
       <div className="svc-card__top">
         <TierBadge tier={service.criticalityTier} size="sm" />
         <LifecycleBadge lifecycle={service.lifecycle} />
-        {(sensitive || phi) && (
-          <span className="svc-card__shield" title={phi ? 'Handles PHI' : 'Restricted data'}>
-            <ShieldIcon width={13} height={13} />
-          </span>
-        )}
+        <VerifiedBadge verificationDate={service.verificationDate} className="svc-card__verified" />
       </div>
 
       <h3 className="svc-card__name">{service.name}</h3>
@@ -51,7 +53,7 @@ export function ServiceCard({
       <div className="svc-card__foot">
         <div className="svc-card__owner mono">
           <span className="svc-card__team">{service.team}</span>
-          {service.product && <span className="svc-card__product">{service.product}</span>}
+          <span className="svc-card__product">Updated: {fmtUpdated(service.lastUpdatedDate)}</span>
         </div>
         <ClassificationBadge value={service.dataClassification} />
       </div>

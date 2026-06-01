@@ -125,6 +125,22 @@
     "catalogGroup": { "type": "string" },
     "processingModesSupported": { "type": "array", "items": { "type": "string", "minLength": 1 } },
 
+    "lastUpdatedDate":  { "type": "string", "format": "date" },
+    "verifiedBy":       { "type": "string", "minLength": 1 },
+    "verificationDate": { "type": "string", "format": "date" },
+
+    "operational": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Links to the systems an on-call engineer reaches for during an incident.",
+      "properties": {
+        "pagerDutyEscalationPolicyLink": { "type": "string", "format": "uri" },
+        "runbookUrl":           { "type": "string", "format": "uri" },
+        "splunkDashboardURL":   { "type": "string", "format": "uri" },
+        "newRelicDashboardURL": { "type": "string", "format": "uri" }
+      }
+    },
+
     "drStrategy": {
       "enum": ["none", "activeActive", "activePassiveCold", "activePassiveWarm", "activePassiveHot", "unknown"]
     },

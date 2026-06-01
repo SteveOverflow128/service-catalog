@@ -2,7 +2,7 @@ import { useRef, useMemo, useState } from 'react';
 import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { interactionStyle, tierStyle } from '../design/tokens';
-import { ClassificationBadge, LifecycleBadge, TierBadge } from './Badges';
+import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
 import {
   ArrowRight,
   CheckIcon,
@@ -23,6 +23,36 @@ function KV({ k, v, mono }: { k: string; v?: React.ReactNode; mono?: boolean }) 
       <span className="kv__k">{k}</span>
       <span className={`kv__v${mono ? ' mono' : ''}`}>{v}</span>
     </div>
+  );
+}
+
+/** Human "12d ago" / "3mo ago" suffix for a YYYY-MM-DD date, or null. */
+function relAge(date?: string): string | null {
+  if (!date) return null;
+  const then = new Date(date);
+  if (Number.isNaN(then.getTime())) return null;
+  const days = Math.floor((Date.now() - then.getTime()) / 86_400_000);
+  if (days < 0) return null;
+  if (days === 0) return 'today';
+  if (days === 1) return '1d ago';
+  if (days < 60) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
+/** A date with a relative-age suffix, e.g. "2026-05-20 · 12d ago". */
+function withAge(date?: string): string | undefined {
+  if (!date) return undefined;
+  const age = relAge(date);
+  return age ? `${date} · ${age}` : date;
+}
+
+/** External link for a KV value, or undefined when the URL is absent. */
+function extLink(href?: string, label?: string): React.ReactNode | undefined {
+  if (!href) return undefined;
+  return (
+    <a href={href} target="_blank" rel="noreferrer">
+      {label ?? href.replace(/^https?:\/\//, '')}
+    </a>
   );
 }
 
@@ -237,6 +267,7 @@ export function ServiceDetailPage({
               <TierBadge tier={service.criticalityTier} />
               <LifecycleBadge lifecycle={service.lifecycle} />
               <ClassificationBadge value={service.dataClassification} />
+              <VerifiedBadge verificationDate={service.verificationDate} />
             </div>
             <h1 className="svc-page__name h-display">{service.name}</h1>
             <code className="svc-page__id mono">{service.serviceId}</code>
@@ -284,6 +315,9 @@ export function ServiceDetailPage({
                   <KV k="Finance Product" v={service.financeProduct} />
                   <KV k="Catalog Group" v={service.catalogGroup} />
                   <KV k="DR Strategy" v={service.drStrategy} mono />
+                  <KV k="Last Updated" v={withAge(service.lastUpdatedDate)} mono />
+                  <KV k="Verified By" v={service.verifiedBy} />
+                  <KV k="Verified" v={withAge(service.verificationDate)} mono />
                 </div>
               </Section>
               <Section label="Runtime">
@@ -303,6 +337,20 @@ export function ServiceDetailPage({
                   />
                 </div>
               </Section>
+              {service.operational &&
+                (service.operational.pagerDutyEscalationPolicyLink ||
+                  service.operational.runbookUrl ||
+                  service.operational.splunkDashboardURL ||
+                  service.operational.newRelicDashboardURL) && (
+                  <Section label="Operational">
+                    <div className="kvgrid">
+                      <KV k="PagerDuty" v={extLink(service.operational.pagerDutyEscalationPolicyLink, 'Escalation policy')} />
+                      <KV k="Runbook" v={extLink(service.operational.runbookUrl, 'Runbook')} />
+                      <KV k="Splunk" v={extLink(service.operational.splunkDashboardURL, 'Dashboard')} />
+                      <KV k="New Relic" v={extLink(service.operational.newRelicDashboardURL, 'Dashboard')} />
+                    </div>
+                  </Section>
+                )}
             </div>
 
             <div>

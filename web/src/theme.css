@@ -44,6 +44,8 @@
   --accent-bright: #6cafe7;
   --accent-deep: #1552bc;
   --signal-crit: #ff4d5e;
+  --signal-ok: #4fd6a0;
+  --signal-warn: #e8b84b;
 
   /* --- Type --- */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;

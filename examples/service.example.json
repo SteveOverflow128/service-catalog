@@ -22,6 +22,17 @@
   "catalogGroup": "Workflow Platform",
   "drStrategy": "activePassiveWarm",
 
+  "lastUpdatedDate": "2026-05-20",
+  "verifiedBy": "workflow-team@example.com",
+  "verificationDate": "2026-05-20",
+
+  "operational": {
+    "pagerDutyEscalationPolicyLink": "https://acme.pagerduty.com/escalation_policies/PWORKFLW",
+    "runbookUrl": "https://runbooks.example.com/task-service",
+    "splunkDashboardURL": "https://splunk.example.com/app/task-service/overview",
+    "newRelicDashboardURL": "https://one.newrelic.com/dashboards/task-service"
+  },
+
   "awsServices": [
     { "type": "rds", "purpose": "Primary OLTP store for tasks and assignments", "engine": "postgres", "version": "16.2", "drStrategy": "startRestoreFromBackup" },
     { "type": "sqs", "purpose": "Async task-event queue for notifications", "drStrategy": "startEmpty" },

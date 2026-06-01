@@ -69,6 +69,13 @@ export interface Feature {
   description?: string;
 }
 
+export interface Operational {
+  pagerDutyEscalationPolicyLink?: string;
+  runbookUrl?: string;
+  splunkDashboardURL?: string;
+  newRelicDashboardURL?: string;
+}
+
 export interface Service {
   serviceId: string;
   name: string;
@@ -88,6 +95,10 @@ export interface Service {
   catalogGroup?: string;
   drStrategy?: string;
   processingModesSupported?: string[];
+  lastUpdatedDate?: string;
+  verifiedBy?: string;
+  verificationDate?: string;
+  operational?: Operational;
   awsServices?: AwsService[];
   datastores?: Datastore[];
   features?: Feature[];

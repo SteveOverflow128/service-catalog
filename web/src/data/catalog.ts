@@ -119,16 +119,12 @@ export class CatalogIndex {
       hop++;
     }
 
-    // Induced subgraph: forward edges whose endpoints are both in the set, and
-    // which are consistent with the traversal direction relative to the focus.
-    const edges = this.allEdges.filter((e) => {
-      if (!visited.has(e.from) || !visited.has(e.to)) return false;
-      if (mode === 'both') return true;
-      // Keep only edges that flow in the explored direction so a "dependencies"
-      // map never sprouts an inbound arrow (and vice versa) from a shared node.
-      if (mode === 'dependencies') return true; // all downstream by construction
-      return true; // dependants: induced upstream edges are all relevant
-    });
+    // Induced subgraph: every forward (depends-on) edge with both endpoints in
+    // the reachable set. No extra direction test is needed — `allEdges` are all
+    // forward edges and `visited` is grown by a single-direction BFS, so any
+    // induced edge is already consistent with the explored direction (and in
+    // 'both' mode every induced edge is relevant by definition).
+    const edges = this.allEdges.filter((e) => visited.has(e.from) && visited.has(e.to));
 
     return { rootId, nodes: visited, edges };
   }
