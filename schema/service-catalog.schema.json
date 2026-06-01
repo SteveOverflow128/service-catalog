@@ -34,6 +34,7 @@
     "valueStream":     { "type": "string" },
     "financeProduct":  { "type": "string" },
     "train":           { "type": "string" },
+    "jiraPrefix":      { "type": "string", "minLength": 1 },
 
     "dataClassification": { "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"] },
 

@@ -443,6 +443,7 @@ export function ServiceDetailPage({
                   <KV k="Product" v={service.product} />
                   <KV k="Value Stream" v={service.valueStream} />
                   <KV k="Train" v={service.train} />
+                  <KV k="Jira Prefix" v={service.jiraPrefix} mono />
                   <KV k="Finance Product" v={service.financeProduct} />
                   <KV k="Catalog Group" v={service.catalogGroup} />
                   <KV k="DR Strategy" v={service.drStrategy} mono />

@@ -91,6 +91,7 @@ export interface Service {
   valueStream?: string;
   financeProduct?: string;
   train?: string;
+  jiraPrefix?: string;
   dataClassification: DataClassification;
   catalogGroup?: string;
   drStrategy?: string;

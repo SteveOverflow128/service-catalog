@@ -34,6 +34,7 @@ export const CSV_FIELDS: CsvField[] = [
   { key: 'catalogGroup', default: true, hint: 'freeform catalog grouping', value: (s) => s.catalogGroup ?? '' },
   { key: 'valueStream', default: true, value: (s) => s.valueStream ?? '' },
   { key: 'train', default: true, value: (s) => s.train ?? '' },
+  { key: 'jiraPrefix', default: true, hint: 'Jira project key prefix', value: (s) => s.jiraPrefix ?? '' },
   { key: 'product', default: true, value: (s) => s.product ?? '' },
   { key: 'team', default: true, value: (s) => s.team },
   { key: 'teamEmail', default: true, value: (s) => s.teamEmail },

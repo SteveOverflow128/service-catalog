@@ -16,6 +16,7 @@
   "valueStream": "Collaboration",
   "financeProduct": "Core-Platform",
   "train": "Atlas",
+  "jiraPrefix": "TASK",
 
   "dataClassification": "CONFIDENTIAL",
 
