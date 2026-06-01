@@ -8,10 +8,10 @@ def check_against_schema(data: Any, schema: dict) -> list[str]:
 
     Returns a list of human-readable error strings. Empty list means valid.
 
-    The `email` format is enforced via FormatChecker (a basic "@"-presence
-    check). The `uri` format is NOT enforced — jsonschema requires optional
-    dependencies (jsonschema[format]) to check it, which are not installed
-    in this phase. Treat `format: uri` declarations as advisory.
+    Format keywords (`uri`, `email`, `date`) are enforced via FormatChecker,
+    which picks up the non-GPL format validators pulled in by the
+    `jsonschema[format-nongpl]` dependency — keeping this in parity with the
+    web pipeline's ajv-formats.
     """
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
     errors: list[str] = []

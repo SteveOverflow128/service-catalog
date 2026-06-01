@@ -8,7 +8,10 @@ version = "0.1.0"
 description = "Validator for service.json files against the service catalog schema"
 requires-python = ">=3.12"
 dependencies = [
-  "jsonschema>=4.18",
+  # [format-nongpl] pulls in the non-GPL format validators so `uri`/`email`/
+  # `date` are actually checked (parity with the web pipeline's ajv-formats),
+  # not silently skipped.
+  "jsonschema[format-nongpl]>=4.18",
 ]
 
 [project.optional-dependencies]
