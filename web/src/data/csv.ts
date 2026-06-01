@@ -79,6 +79,16 @@ export const CSV_FIELDS: CsvField[] = [
     value: (s) => (s.dependencies ?? []).map((d) => d.serviceId).join(LIST_SEP),
   },
   {
+    key: 'dependencyList',
+    default: false,
+    list: true,
+    hint: 'display names of direct (1-hop) dependencies; falls back to serviceId for externals',
+    value: (s, index) =>
+      (s.dependencies ?? [])
+        .map((d) => index.byId.get(d.serviceId)?.name ?? d.serviceId)
+        .join(LIST_SEP),
+  },
+  {
     key: 'excludedDependencies.count',
     default: false,
     hint: 'number of excluded dependencies',
