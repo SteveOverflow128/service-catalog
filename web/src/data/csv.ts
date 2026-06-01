@@ -8,6 +8,8 @@ import type { Service } from '../types';
 export interface CsvField {
   key: string;
   default: boolean;
+  /** Show in the primary Columns section without pre-checking it. */
+  promoted?: boolean;
   list?: boolean;
   hint?: string;
   value: (s: Service, index: CatalogIndex) => string;
@@ -27,6 +29,7 @@ const workloadAws = (s: Service) =>
   );
 
 export const CSV_FIELDS: CsvField[] = [
+  { key: 'name', default: false, promoted: true, value: (s) => s.name },
   { key: 'serviceId', default: true, value: (s) => s.serviceId },
   { key: 'catalogGroup', default: true, hint: 'freeform catalog grouping', value: (s) => s.catalogGroup ?? '' },
   { key: 'valueStream', default: true, value: (s) => s.valueStream ?? '' },
@@ -50,7 +53,7 @@ export const CSV_FIELDS: CsvField[] = [
     value: (s, index) => [...new Set(index.dependantsOf(s.serviceId).map((e) => e.from))].sort().join(LIST_SEP),
   },
   // Off by default:
-  { key: 'name', default: false, value: (s) => s.name },
+  
   { key: 'lifecycle', default: false, value: (s) => s.lifecycle },
   { key: 'description', default: false, value: (s) => s.description ?? '' },
   { key: 'repository', default: false, value: (s) => s.repository },

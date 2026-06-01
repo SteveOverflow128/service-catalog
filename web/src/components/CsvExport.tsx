@@ -82,8 +82,8 @@ export function CsvExport({
     URL.revokeObjectURL(url);
   };
 
-  const defaults = CSV_FIELDS.filter((f) => f.default);
-  const additional = CSV_FIELDS.filter((f) => !f.default);
+  const defaults = CSV_FIELDS.filter((f) => f.default || f.promoted);
+  const additional = CSV_FIELDS.filter((f) => !f.default && !f.promoted);
 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="CSV export">
