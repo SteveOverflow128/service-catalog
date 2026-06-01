@@ -52,6 +52,7 @@
           "drStrategy": {
             "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive", "unknown"]
           },
+          "rdsPrimaryInstanceCount": { "type": "integer", "minimum": 0 },
           "minReplicas":    { "type": "integer", "minimum": 0 },
           "maxReplicas":    { "type": "integer", "minimum": 0 },
           "cpuRequest":     { "type": "string" },

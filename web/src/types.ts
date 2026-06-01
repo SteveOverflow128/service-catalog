@@ -44,6 +44,7 @@ export interface AwsService {
   version?: string;
   instanceType?: string;
   drStrategy?: string;
+  rdsPrimaryInstanceCount?: number;
   minReplicas?: number;
   maxReplicas?: number;
   cpuRequest?: string;

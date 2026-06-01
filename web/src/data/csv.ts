@@ -145,6 +145,12 @@ export const CSV_FIELDS: CsvField[] = [
     value: (s) => workloadAws(s)?.memoryLimit ?? '',
   },
   {
+    key: 'rdsPrimaryInstanceCount',
+    default: false,
+    hint: 'primary instance count of the RDS awsService, when present',
+    value: (s) => { const r = rdsAws(s); return r?.rdsPrimaryInstanceCount != null ? String(r.rdsPrimaryInstanceCount) : ''; },
+  },
+  {
     key: 'rdsEngine',
     default: false,
     hint: 'engine of the RDS awsService, when present',
