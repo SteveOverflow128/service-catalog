@@ -4,12 +4,10 @@ import { tierStyle } from '../design/tokens';
 import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
 import { ArrowRight } from './icons';
 
-/** "YYYY-MM-DD" → "MM-DD-YY", or "unknown" when absent/unparseable. */
+/** Normalize to "YYYY-MM-DD", or "unknown" when absent/unparseable. */
 function fmtUpdated(date?: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date ?? '');
-  if (!m) return 'unknown';
-  const [, y, mo, d] = m;
-  return `${mo}-${d}-${y.slice(2)}`;
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(date ?? '');
+  return m ? m[1] : 'unknown';
 }
 
 export function ServiceCard({
