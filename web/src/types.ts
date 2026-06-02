@@ -47,7 +47,7 @@ export interface Resource {
   version?: string;
   instanceType?: string;
   drStrategy?: string;
-  primaryInstanceCount?: number;
+  dbInstanceCount?: number;
   minReplicas?: number;
   maxReplicas?: number;
   cpuRequest?: string;

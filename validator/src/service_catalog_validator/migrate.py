@@ -14,13 +14,13 @@ def _rename_key(d: dict, old: str, new: str) -> dict:
 
 def _migrate_item(item):
     """Add `provider: aws` as the first key (unless one already exists) and
-    rename `rdsPrimaryInstanceCount` -> `primaryInstanceCount`. Non-dict items
+    rename `rdsPrimaryInstanceCount` -> `dbInstanceCount`. Non-dict items
     pass through untouched."""
     if not isinstance(item, dict):
         return item
     migrated = {"provider": "aws", **item}  # existing provider value wins, stays first
     if "rdsPrimaryInstanceCount" in migrated:
-        migrated = _rename_key(migrated, "rdsPrimaryInstanceCount", "primaryInstanceCount")
+        migrated = _rename_key(migrated, "rdsPrimaryInstanceCount", "dbInstanceCount")
     return migrated
 
 

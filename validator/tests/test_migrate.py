@@ -39,7 +39,7 @@ def test_existing_provider_not_overwritten():
 def test_renames_rds_primary_instance_count():
     item = migrate_document(_legacy())[0]["resources"][0]
     assert "rdsPrimaryInstanceCount" not in item
-    assert item["primaryInstanceCount"] == 2
+    assert item["dbInstanceCount"] == 2
 
 
 def test_no_awsservices_is_unchanged():

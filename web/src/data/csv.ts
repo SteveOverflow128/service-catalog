@@ -19,7 +19,7 @@ const LIST_SEP = '; ';
 
 /** First resource that looks like a primary datastore (carries engine/instance info). */
 const dbResource = (s: Service) =>
-  (s.resources ?? []).find((r) => r.engine != null || r.primaryInstanceCount != null);
+  (s.resources ?? []).find((r) => r.engine != null || r.dbInstanceCount != null);
 
 /** First resource that carries workload sizing fields. */
 const workloadResource = (s: Service) =>
@@ -155,10 +155,10 @@ export const CSV_FIELDS: CsvField[] = [
     value: (s) => workloadResource(s)?.memoryLimit ?? '',
   },
   {
-    key: 'primaryInstanceCount',
+    key: 'dbInstanceCount',
     default: false,
-    hint: 'primary instance count of the primary datastore resource, when present',
-    value: (s) => { const r = dbResource(s); return r?.primaryInstanceCount != null ? String(r.primaryInstanceCount) : ''; },
+    hint: 'instance count of the primary datastore resource, when present',
+    value: (s) => { const r = dbResource(s); return r?.dbInstanceCount != null ? String(r.dbInstanceCount) : ''; },
   },
   {
     key: 'dbEngine',
