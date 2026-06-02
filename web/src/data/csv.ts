@@ -46,6 +46,13 @@ export const CSV_FIELDS: CsvField[] = [
     value: (s) => (s.resources ?? []).map((r) => r.type).join(LIST_SEP),
   },
   {
+    key: 'resources.provider',
+    default: false,
+    list: true,
+    hint: 'distinct providers across all resources',
+    value: (s) => [...new Set((s.resources ?? []).map((r) => r.provider))].sort().join(LIST_SEP),
+  },
+  {
     key: 'primaryDependents',
     default: true,
     list: true,

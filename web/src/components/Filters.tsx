@@ -13,6 +13,7 @@ export interface FilterState {
   valueStreams: Set<string>;
   frameworks: Set<string>;
   resourceTypes: Set<string>;
+  providers: Set<string>;
 }
 
 export const emptyFilters = (): FilterState => ({
@@ -25,6 +26,7 @@ export const emptyFilters = (): FilterState => ({
   valueStreams: new Set(),
   frameworks: new Set(),
   resourceTypes: new Set(),
+  providers: new Set(),
 });
 
 export function countActive(f: FilterState): number {
@@ -113,7 +115,8 @@ export function Filters({
       products: tally(services, (s) => (s.product ? [s.product] : [])),
       valueStreams: tally(services, (s) => (s.valueStream ? [s.valueStream] : [])),
       frameworks: tally(services, (s) => (s.softwareFramework ? [s.softwareFramework] : [])),
-      resourceTypes: tally(services, (s) => (s.resources ?? []).map((r) => r.type)),
+      resourceTypes: tally(services, (s) => [...new Set((s.resources ?? []).map((r) => r.type))]),
+      providers: tally(services, (s) => [...new Set((s.resources ?? []).map((r) => r.provider))]),
     }),
     [services],
   );
@@ -190,6 +193,13 @@ export function Filters({
         defaultOpen={false}
       />
       <FacetGroup
+        title="Provider"
+        options={opts(facets.providers, counts.providers)}
+        selected={state.providers}
+        onToggle={(v) => onToggle('providers', v)}
+        defaultOpen={false}
+      />
+      <FacetGroup
         title="Resource Type"
         options={opts(facets.resourceTypes, counts.resourceTypes)}
         selected={state.resourceTypes}
@@ -211,6 +221,7 @@ export function matchesFilters(s: Service, f: FilterState): boolean {
   if (f.valueStreams.size && !(s.valueStream && f.valueStreams.has(s.valueStream))) return false;
   if (f.frameworks.size && !(s.softwareFramework && f.frameworks.has(s.softwareFramework))) return false;
   if (f.resourceTypes.size && !(s.resources ?? []).some((r) => f.resourceTypes.has(r.type))) return false;
+  if (f.providers.size && !(s.resources ?? []).some((r) => f.providers.has(r.provider))) return false;
   return true;
 }
 

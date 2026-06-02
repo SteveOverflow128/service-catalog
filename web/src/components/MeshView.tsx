@@ -9,9 +9,9 @@ import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
 import { CodeIcon, TableIcon } from './icons';
 
-type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'resource.type' | 'criticalityTier' | 'team';
+type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'resource.type' | 'resource.provider' | 'criticalityTier' | 'team';
 
-const DIM_ORDER: GroupByDim[] = ['train', 'catalogGroup', 'product', 'team', 'criticalityTier', 'resource.type'];
+const DIM_ORDER: GroupByDim[] = ['train', 'catalogGroup', 'product', 'team', 'criticalityTier', 'resource.type', 'resource.provider'];
 
 const DIM_LABELS: Record<GroupByDim, string> = {
   train: 'Train',
@@ -20,6 +20,7 @@ const DIM_LABELS: Record<GroupByDim, string> = {
   team: 'Team',
   criticalityTier: 'Criticality Tier',
   'resource.type': 'Resource Type',
+  'resource.provider': 'Provider',
 };
 
 function getDimValues(services: Service[], dim: GroupByDim): string[] {
@@ -33,6 +34,9 @@ function getDimValues(services: Service[], dim: GroupByDim): string[] {
     else if (dim === 'resource.type') {
       for (const r of s.resources ?? []) vals.add(r.type);
     }
+    else if (dim === 'resource.provider') {
+      for (const r of s.resources ?? []) vals.add(r.provider);
+    }
   }
   return [...vals].sort((a, b) => a.localeCompare(b));
 }
@@ -45,6 +49,7 @@ function filterByDim(services: Service[], dim: GroupByDim, value: string): Servi
     if (dim === 'criticalityTier') return String(s.criticalityTier) === value;
     if (dim === 'team') return s.team === value;
     if (dim === 'resource.type') return (s.resources ?? []).some((r) => r.type === value);
+    if (dim === 'resource.provider') return (s.resources ?? []).some((r) => r.provider === value);
     return false;
   });
 }
