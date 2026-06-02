@@ -52,6 +52,7 @@
           "engine":       { "type": "string" },
           "version":      { "type": "string" },
           "instanceType": { "type": "string" },
+          "region":       { "type": "string" },
           "drStrategy": {
             "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive", "unknown"]
           },

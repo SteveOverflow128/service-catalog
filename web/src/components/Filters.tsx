@@ -14,6 +14,7 @@ export interface FilterState {
   frameworks: Set<string>;
   resourceTypes: Set<string>;
   providers: Set<string>;
+  regions: Set<string>;
 }
 
 export const emptyFilters = (): FilterState => ({
@@ -27,6 +28,7 @@ export const emptyFilters = (): FilterState => ({
   frameworks: new Set(),
   resourceTypes: new Set(),
   providers: new Set(),
+  regions: new Set(),
 });
 
 export function countActive(f: FilterState): number {
@@ -117,6 +119,9 @@ export function Filters({
       frameworks: tally(services, (s) => (s.softwareFramework ? [s.softwareFramework] : [])),
       resourceTypes: tally(services, (s) => [...new Set((s.resources ?? []).map((r) => r.type))]),
       providers: tally(services, (s) => [...new Set((s.resources ?? []).map((r) => r.provider))]),
+      regions: tally(services, (s) => [
+        ...new Set((s.resources ?? []).map((r) => r.region).filter((x): x is string => !!x)),
+      ]),
     }),
     [services],
   );
@@ -200,6 +205,13 @@ export function Filters({
         defaultOpen={false}
       />
       <FacetGroup
+        title="Region"
+        options={opts(facets.regions, counts.regions)}
+        selected={state.regions}
+        onToggle={(v) => onToggle('regions', v)}
+        defaultOpen={false}
+      />
+      <FacetGroup
         title="Resource Type"
         options={opts(facets.resourceTypes, counts.resourceTypes)}
         selected={state.resourceTypes}
@@ -222,6 +234,7 @@ export function matchesFilters(s: Service, f: FilterState): boolean {
   if (f.frameworks.size && !(s.softwareFramework && f.frameworks.has(s.softwareFramework))) return false;
   if (f.resourceTypes.size && !(s.resources ?? []).some((r) => f.resourceTypes.has(r.type))) return false;
   if (f.providers.size && !(s.resources ?? []).some((r) => f.providers.has(r.provider))) return false;
+  if (f.regions.size && !(s.resources ?? []).some((r) => r.region != null && f.regions.has(r.region))) return false;
   return true;
 }
 

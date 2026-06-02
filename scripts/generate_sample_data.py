@@ -6,6 +6,18 @@ import os
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 
+# Demo regions per provider. Each service picks a stable index by serviceId so
+# the Region facet/dimension has variety across the catalog.
+_REGIONS = {
+    "aws": ["us-east-1", "us-west-2", "eu-west-1"],
+    "azure": ["eastus", "westeurope"],
+    "on-prem": ["dc-atlanta", "dc-denver"],
+}
+
+def _region_for(provider, seed):
+    opts = _REGIONS.get(provider)
+    return opts[seed % len(opts)] if opts else None
+
 def svc(service_id, name, team, team_email, lifecycle, tier, runtime, framework,
         product, value_stream, description, data_class, deps=None,
         resources=None, datastores=None, features=None, tags=None):
@@ -28,6 +40,12 @@ def svc(service_id, name, team, team_email, lifecycle, tier, runtime, framework,
     if deps:
         obj["dependencies"] = deps
     if resources:
+        seed = sum(ord(c) for c in service_id)
+        for r in resources:
+            if isinstance(r, dict) and "region" not in r:
+                reg = _region_for(r.get("provider"), seed)
+                if reg:
+                    r["region"] = reg
         obj["resources"] = resources
     if datastores:
         obj["datastores"] = datastores

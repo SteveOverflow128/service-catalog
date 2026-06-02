@@ -561,6 +561,7 @@ export function ServiceDetailPage({
                     <div className="ministore__top">
                       <span className="mono ministore__name">{r.type}</span>
                       {r.provider && <span className="tag tag--type mono">{r.provider}</span>}
+                      {r.region && <span className="tag tag--type mono">{r.region}</span>}
                       {r.drStrategy && <span className="tag tag--type mono">{r.drStrategy}</span>}
                     </div>
                     <div className="ministore__meta">{r.purpose}</div>

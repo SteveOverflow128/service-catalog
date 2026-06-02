@@ -150,6 +150,7 @@ export interface Facets {
   frameworks: string[];
   resourceTypes: string[];
   providers: string[];
+  regions: string[];
 }
 
 export function deriveFacets(services: Service[]): Facets {
@@ -164,6 +165,7 @@ export function deriveFacets(services: Service[]): Facets {
   const frameworks = new Set<string>();
   const resourceTypes = new Set<string>();
   const providers = new Set<string>();
+  const regions = new Set<string>();
 
   for (const s of services) {
     if (s.team) teams.add(s.team);
@@ -177,6 +179,7 @@ export function deriveFacets(services: Service[]): Facets {
     if (s.softwareFramework) frameworks.add(s.softwareFramework);
     for (const r of s.resources ?? []) resourceTypes.add(r.type);
     for (const r of s.resources ?? []) providers.add(r.provider);
+    for (const r of s.resources ?? []) if (r.region) regions.add(r.region);
   }
 
   const sorted = (set: Set<string>) => [...set].sort((a, b) => a.localeCompare(b));
@@ -192,5 +195,6 @@ export function deriveFacets(services: Service[]): Facets {
     frameworks: sorted(frameworks),
     resourceTypes: sorted(resourceTypes),
     providers: sorted(providers),
+    regions: sorted(regions),
   };
 }

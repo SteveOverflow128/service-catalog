@@ -46,6 +46,7 @@ export interface Resource {
   engine?: string;
   version?: string;
   instanceType?: string;
+  region?: string;
   drStrategy?: string;
   dbInstanceCount?: number;
   minReplicas?: number;
