@@ -9,9 +9,9 @@ import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
 import { CodeIcon, TableIcon } from './icons';
 
-type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'awsService.type' | 'criticalityTier' | 'team';
+type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'resource.type' | 'criticalityTier' | 'team';
 
-const DIM_ORDER: GroupByDim[] = ['train', 'catalogGroup', 'product', 'team', 'criticalityTier', 'awsService.type'];
+const DIM_ORDER: GroupByDim[] = ['train', 'catalogGroup', 'product', 'team', 'criticalityTier', 'resource.type'];
 
 const DIM_LABELS: Record<GroupByDim, string> = {
   train: 'Train',
@@ -19,7 +19,7 @@ const DIM_LABELS: Record<GroupByDim, string> = {
   product: 'Product',
   team: 'Team',
   criticalityTier: 'Criticality Tier',
-  'awsService.type': 'AWS Service',
+  'resource.type': 'Resource Type',
 };
 
 function getDimValues(services: Service[], dim: GroupByDim): string[] {
@@ -30,8 +30,8 @@ function getDimValues(services: Service[], dim: GroupByDim): string[] {
     else if (dim === 'train' && s.train) vals.add(s.train);
     else if (dim === 'criticalityTier') vals.add(String(s.criticalityTier));
     else if (dim === 'team' && s.team) vals.add(s.team);
-    else if (dim === 'awsService.type') {
-      for (const a of s.awsServices ?? []) vals.add(a.type);
+    else if (dim === 'resource.type') {
+      for (const r of s.resources ?? []) vals.add(r.type);
     }
   }
   return [...vals].sort((a, b) => a.localeCompare(b));
@@ -44,7 +44,7 @@ function filterByDim(services: Service[], dim: GroupByDim, value: string): Servi
     if (dim === 'train') return s.train === value;
     if (dim === 'criticalityTier') return String(s.criticalityTier) === value;
     if (dim === 'team') return s.team === value;
-    if (dim === 'awsService.type') return (s.awsServices ?? []).some((a) => a.type === value);
+    if (dim === 'resource.type') return (s.resources ?? []).some((r) => r.type === value);
     return false;
   });
 }

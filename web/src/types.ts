@@ -37,14 +37,17 @@ export interface ExcludedDependency {
   exclusionReason: string;
 }
 
-export interface AwsService {
+export type Provider = 'aws' | 'azure' | 'on-prem' | string;
+
+export interface Resource {
+  provider: Provider;
   type: string;
   purpose: string;
   engine?: string;
   version?: string;
   instanceType?: string;
   drStrategy?: string;
-  rdsPrimaryInstanceCount?: number;
+  primaryInstanceCount?: number;
   minReplicas?: number;
   maxReplicas?: number;
   cpuRequest?: string;
@@ -100,7 +103,7 @@ export interface Service {
   verifiedBy?: string;
   verificationDate?: string;
   operational?: Operational;
-  awsServices?: AwsService[];
+  resources?: Resource[];
   datastores?: Datastore[];
   features?: Feature[];
   dependencies?: Dependency[];

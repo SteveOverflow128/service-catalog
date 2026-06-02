@@ -148,7 +148,7 @@ export interface Facets {
   classifications: string[];
   runtimes: string[];
   frameworks: string[];
-  awsTypes: string[];
+  resourceTypes: string[];
 }
 
 export function deriveFacets(services: Service[]): Facets {
@@ -161,7 +161,7 @@ export function deriveFacets(services: Service[]): Facets {
   const classifications = new Set<string>();
   const runtimes = new Set<string>();
   const frameworks = new Set<string>();
-  const awsTypes = new Set<string>();
+  const resourceTypes = new Set<string>();
 
   for (const s of services) {
     if (s.team) teams.add(s.team);
@@ -173,7 +173,7 @@ export function deriveFacets(services: Service[]): Facets {
     if (s.dataClassification) classifications.add(s.dataClassification);
     if (s.runtime) runtimes.add(s.runtime);
     if (s.softwareFramework) frameworks.add(s.softwareFramework);
-    for (const a of s.awsServices ?? []) awsTypes.add(a.type);
+    for (const r of s.resources ?? []) resourceTypes.add(r.type);
   }
 
   const sorted = (set: Set<string>) => [...set].sort((a, b) => a.localeCompare(b));
@@ -187,6 +187,6 @@ export function deriveFacets(services: Service[]): Facets {
     classifications: sorted(classifications),
     runtimes: sorted(runtimes),
     frameworks: sorted(frameworks),
-    awsTypes: sorted(awsTypes),
+    resourceTypes: sorted(resourceTypes),
   };
 }

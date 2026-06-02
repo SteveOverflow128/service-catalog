@@ -17,15 +17,14 @@ export interface CsvField {
 
 const LIST_SEP = '; ';
 
-/** First entry of a given type in awsServices (case-insensitive). */
-const findAws = (s: Service, t: string) =>
-  (s.awsServices ?? []).find((a) => a.type.toUpperCase() === t.toUpperCase());
-const rdsAws = (s: Service) => findAws(s, 'RDS');
+/** First resource that looks like a primary datastore (carries engine/instance info). */
+const dbResource = (s: Service) =>
+  (s.resources ?? []).find((r) => r.engine != null || r.primaryInstanceCount != null);
 
-/** First awsService entry that carries workload sizing fields. */
-const workloadAws = (s: Service) =>
-  (s.awsServices ?? []).find(
-    (a) => a.minReplicas != null || a.maxReplicas != null || a.cpuRequest != null || a.memoryRequest != null,
+/** First resource that carries workload sizing fields. */
+const workloadResource = (s: Service) =>
+  (s.resources ?? []).find(
+    (r) => r.minReplicas != null || r.maxReplicas != null || r.cpuRequest != null || r.memoryRequest != null,
   );
 
 export const CSV_FIELDS: CsvField[] = [
@@ -40,11 +39,11 @@ export const CSV_FIELDS: CsvField[] = [
   { key: 'teamEmail', default: true, value: (s) => s.teamEmail },
   { key: 'criticalityTier', default: true, value: (s) => String(s.criticalityTier) },
   {
-    key: 'awsServices.type',
+    key: 'resources.type',
     default: true,
     list: true,
-    hint: 'list of AWS service types',
-    value: (s) => (s.awsServices ?? []).map((a) => a.type).join(LIST_SEP),
+    hint: 'list of resource types',
+    value: (s) => (s.resources ?? []).map((r) => r.type).join(LIST_SEP),
   },
   {
     key: 'primaryDependents',
@@ -99,11 +98,11 @@ export const CSV_FIELDS: CsvField[] = [
     value: (s) => String(s.excludedDependencies?.length ?? 0),
   },
   {
-    key: 'awsServices.drStrategy',
+    key: 'resources.drStrategy',
     default: false,
     list: true,
-    hint: 'DR strategies across all AWS services',
-    value: (s) => (s.awsServices ?? []).map((a) => a.drStrategy ?? '').filter(Boolean).join(LIST_SEP),
+    hint: 'DR strategies across all resources',
+    value: (s) => (s.resources ?? []).map((r) => r.drStrategy ?? '').filter(Boolean).join(LIST_SEP),
   },
   {
     key: 'datastores',
@@ -115,62 +114,62 @@ export const CSV_FIELDS: CsvField[] = [
   {
     key: 'minReplicas',
     default: false,
-    hint: 'minimum replicas of the workload awsService, when present',
-    value: (s) => { const w = workloadAws(s); return w?.minReplicas != null ? String(w.minReplicas) : ''; },
+    hint: 'minimum replicas of the workload resource, when present',
+    value: (s) => { const w = workloadResource(s); return w?.minReplicas != null ? String(w.minReplicas) : ''; },
   },
   {
     key: 'maxReplicas',
     default: false,
-    hint: 'maximum replicas of the workload awsService, when present',
-    value: (s) => { const w = workloadAws(s); return w?.maxReplicas != null ? String(w.maxReplicas) : ''; },
+    hint: 'maximum replicas of the workload resource, when present',
+    value: (s) => { const w = workloadResource(s); return w?.maxReplicas != null ? String(w.maxReplicas) : ''; },
   },
   {
     key: 'cpuRequest',
     default: false,
-    hint: 'CPU request of the workload awsService, when present',
-    value: (s) => workloadAws(s)?.cpuRequest ?? '',
+    hint: 'CPU request of the workload resource, when present',
+    value: (s) => workloadResource(s)?.cpuRequest ?? '',
   },
   {
     key: 'memoryRequest',
     default: false,
-    hint: 'memory request of the workload awsService, when present',
-    value: (s) => workloadAws(s)?.memoryRequest ?? '',
+    hint: 'memory request of the workload resource, when present',
+    value: (s) => workloadResource(s)?.memoryRequest ?? '',
   },
   {
     key: 'cpuLimit',
     default: false,
-    hint: 'CPU limit of the workload awsService, when present',
-    value: (s) => workloadAws(s)?.cpuLimit ?? '',
+    hint: 'CPU limit of the workload resource, when present',
+    value: (s) => workloadResource(s)?.cpuLimit ?? '',
   },
   {
     key: 'memoryLimit',
     default: false,
-    hint: 'memory limit of the workload awsService, when present',
-    value: (s) => workloadAws(s)?.memoryLimit ?? '',
+    hint: 'memory limit of the workload resource, when present',
+    value: (s) => workloadResource(s)?.memoryLimit ?? '',
   },
   {
-    key: 'rdsPrimaryInstanceCount',
+    key: 'primaryInstanceCount',
     default: false,
-    hint: 'primary instance count of the RDS awsService, when present',
-    value: (s) => { const r = rdsAws(s); return r?.rdsPrimaryInstanceCount != null ? String(r.rdsPrimaryInstanceCount) : ''; },
+    hint: 'primary instance count of the primary datastore resource, when present',
+    value: (s) => { const r = dbResource(s); return r?.primaryInstanceCount != null ? String(r.primaryInstanceCount) : ''; },
   },
   {
-    key: 'rdsEngine',
+    key: 'dbEngine',
     default: false,
-    hint: 'engine of the RDS awsService, when present',
-    value: (s) => rdsAws(s)?.engine ?? '',
+    hint: 'engine of the primary datastore resource, when present',
+    value: (s) => dbResource(s)?.engine ?? '',
   },
   {
-    key: 'rdsVersion',
+    key: 'dbVersion',
     default: false,
-    hint: 'version of the RDS awsService, when present',
-    value: (s) => rdsAws(s)?.version ?? '',
+    hint: 'version of the primary datastore resource, when present',
+    value: (s) => dbResource(s)?.version ?? '',
   },
   {
-    key: 'rdsInstanceType',
+    key: 'dbInstanceType',
     default: false,
-    hint: 'instanceType of the RDS awsService, when present',
-    value: (s) => rdsAws(s)?.instanceType ?? '',
+    hint: 'instanceType of the primary datastore resource, when present',
+    value: (s) => dbResource(s)?.instanceType ?? '',
   },
 ];
 

@@ -12,7 +12,7 @@ export interface FilterState {
   products: Set<string>;
   valueStreams: Set<string>;
   frameworks: Set<string>;
-  awsTypes: Set<string>;
+  resourceTypes: Set<string>;
 }
 
 export const emptyFilters = (): FilterState => ({
@@ -24,7 +24,7 @@ export const emptyFilters = (): FilterState => ({
   products: new Set(),
   valueStreams: new Set(),
   frameworks: new Set(),
-  awsTypes: new Set(),
+  resourceTypes: new Set(),
 });
 
 export function countActive(f: FilterState): number {
@@ -113,7 +113,7 @@ export function Filters({
       products: tally(services, (s) => (s.product ? [s.product] : [])),
       valueStreams: tally(services, (s) => (s.valueStream ? [s.valueStream] : [])),
       frameworks: tally(services, (s) => (s.softwareFramework ? [s.softwareFramework] : [])),
-      awsTypes: tally(services, (s) => (s.awsServices ?? []).map((a) => a.type)),
+      resourceTypes: tally(services, (s) => (s.resources ?? []).map((r) => r.type)),
     }),
     [services],
   );
@@ -190,10 +190,10 @@ export function Filters({
         defaultOpen={false}
       />
       <FacetGroup
-        title="AWS Service"
-        options={opts(facets.awsTypes, counts.awsTypes)}
-        selected={state.awsTypes}
-        onToggle={(v) => onToggle('awsTypes', v)}
+        title="Resource Type"
+        options={opts(facets.resourceTypes, counts.resourceTypes)}
+        selected={state.resourceTypes}
+        onToggle={(v) => onToggle('resourceTypes', v)}
         defaultOpen={false}
       />
     </aside>
@@ -210,7 +210,7 @@ export function matchesFilters(s: Service, f: FilterState): boolean {
   if (f.products.size && !(s.product && f.products.has(s.product))) return false;
   if (f.valueStreams.size && !(s.valueStream && f.valueStreams.has(s.valueStream))) return false;
   if (f.frameworks.size && !(s.softwareFramework && f.frameworks.has(s.softwareFramework))) return false;
-  if (f.awsTypes.size && !(s.awsServices ?? []).some((a) => f.awsTypes.has(a.type))) return false;
+  if (f.resourceTypes.size && !(s.resources ?? []).some((r) => f.resourceTypes.has(r.type))) return false;
   return true;
 }
 

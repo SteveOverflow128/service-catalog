@@ -424,10 +424,10 @@ export function ServiceDetailPage({
                   <span className="svc-page__stat-l">datastores</span>
                 </div>
               )}
-              {(service.awsServices?.length ?? 0) > 0 && (
+              {(service.resources?.length ?? 0) > 0 && (
                 <div className="svc-page__stat">
-                  <span className="svc-page__stat-n mono">{service.awsServices!.length}</span>
-                  <span className="svc-page__stat-l">AWS services</span>
+                  <span className="svc-page__stat-n mono">{service.resources!.length}</span>
+                  <span className="svc-page__stat-l">resources</span>
                 </div>
               )}
             </div>
@@ -553,16 +553,17 @@ export function ServiceDetailPage({
             </Section>
           )}
 
-          {service.awsServices && service.awsServices.length > 0 && (
-            <Section label="AWS Services" count={service.awsServices.length} icon={<CloudIcon width={13} height={13} />}>
+          {service.resources && service.resources.length > 0 && (
+            <Section label="Resources" count={service.resources.length} icon={<CloudIcon width={13} height={13} />}>
               <div className="svc-page__cardgrid">
-                {service.awsServices.map((a, i) => (
+                {service.resources.map((r, i) => (
                   <div className="ministore" key={i}>
                     <div className="ministore__top">
-                      <span className="mono ministore__name">{a.type}</span>
-                      {a.drStrategy && <span className="tag tag--type mono">{a.drStrategy}</span>}
+                      <span className="mono ministore__name">{r.type}</span>
+                      {r.provider && <span className="tag tag--type mono">{r.provider}</span>}
+                      {r.drStrategy && <span className="tag tag--type mono">{r.drStrategy}</span>}
                     </div>
-                    <div className="ministore__meta">{a.purpose}</div>
+                    <div className="ministore__meta">{r.purpose}</div>
                   </div>
                 ))}
               </div>
