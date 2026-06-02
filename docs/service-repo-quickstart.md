@@ -15,7 +15,7 @@ Copy `examples/service.minimal.json` from the catalog repo to your repo's root a
 - `repository` — repo URL
 - `dataClassification` — one of `PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, `RESTRICTED` (the most sensitive data the service handles)
 
-Then add optional sections (`awsServices`, `datastores`, `features`, `dependencies`, `tags`, etc.) as they apply. See `examples/service.example.json` for a full reference.
+Then add optional sections (`resources`, `datastores`, `features`, `dependencies`, `tags`, etc.) as they apply. See `examples/service.example.json` for a full reference.
 
 ## 2. Validate locally
 
@@ -44,7 +44,7 @@ This fails the build if `service.json` is invalid.
 
 ## 4. Tier-0 / tier-1 reminders
 
-The schema does not require `awsServices`, `datastores`, or `dependencies` arrays, but the catalog app will surface gaps for tier-0 and tier-1 services. Treat those sections as effectively required if your service is `criticalityTier: 0` or `1`.
+The schema does not require `resources`, `datastores`, or `dependencies` arrays, but the catalog app will surface gaps for tier-0 and tier-1 services. Treat those sections as effectively required if your service is `criticalityTier: 0` or `1`.
 
 ## See also
 

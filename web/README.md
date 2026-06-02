@@ -78,11 +78,11 @@ exports just the services in the current neighborhood (honoring mode + depth).
 Columns are a fixed catalog defined in `src/data/csv.ts`:
 
 - **On by default:** `serviceId`, `valueStream`, `train`, `product`, `team`,
-  `teamEmail`, `criticalityTier`, `awsServices.type` (the service's AWS service
+  `teamEmail`, `criticalityTier`, `resources.type` (the service's resource
   types, one cell), `primaryDependents` (serviceIds that **directly depend on**
   this service, one cell).
-- **Available:** `rdsEngine`, `rdsVersion`, `rdsInstanceType` (engine / version /
-  instanceType of the service's RDS `awsService`, blank when it has none),
+- **Available:** `dbEngine`, `dbVersion`, `dbInstanceType` (engine / version /
+  instanceType of the service's primary datastore resource, blank when it has none),
   `name`, `runtime`, `softwareFramework`, `dataClassification`, `financeProduct`.
 
 Toggle columns (or use all / defaults / none); the preview updates live. Copy or
