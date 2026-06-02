@@ -170,6 +170,17 @@ export function ServiceDetail({
             }
             mono
           />
+          <KV
+            k="Provisioner Repo"
+            v={
+              service.provisionerRepoURL ? (
+                <a href={service.provisionerRepoURL} target="_blank" rel="noreferrer">
+                  {service.provisionerRepoURL.replace(/^https?:\/\//, '')}
+                </a>
+              ) : undefined
+            }
+            mono
+          />
         </div>
       </Section>
 

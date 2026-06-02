@@ -88,6 +88,14 @@ def test_bad_repository_uri_returns_error(schema, minimal_example):
     assert any("repository" in e or "uri" in e.lower() for e in errors), errors
 
 
+def test_bad_provisioner_repo_uri_returns_error(schema, minimal_example):
+    """provisionerRepoURL is optional but, when present, must be a valid uri."""
+    bad = dict(minimal_example)
+    bad["provisionerRepoURL"] = "not a uri"
+    errors = check_against_schema(bad, schema)
+    assert any("provisionerRepoURL" in e and "uri" in e.lower() for e in errors), errors
+
+
 def test_bad_date_format_returns_error(schema, minimal_example):
     """date format must be enforced for lastUpdatedDate / verificationDate."""
     bad = dict(minimal_example)

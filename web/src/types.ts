@@ -87,6 +87,7 @@ export interface Service {
   lifecycle: Lifecycle;
   criticalityTier: CriticalityTier;
   repository: string;
+  provisionerRepoURL?: string;
   runtime?: string;
   softwareFramework?: string;
   team: string;
