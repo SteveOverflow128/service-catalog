@@ -81,13 +81,21 @@ Columns are a fixed catalog defined in `src/data/csv.ts`:
   `teamEmail`, `criticalityTier`, `resources.type` (the service's resource
   types, one cell), `primaryDependents` (serviceIds that **directly depend on**
   this service, one cell).
-- **Available:** `dbEngine`, `dbVersion`, `dbInstanceType` (engine / version /
-  instanceType of the service's primary datastore resource, blank when it has none),
-  `name`, `runtime`, `softwareFramework`, `dataClassification`, `financeProduct`.
+- **Available:** `region`, `resources.provider`, `resources.drStrategy`,
+  `dbInstanceCount`, `dbEngine`, `dbVersion`, `dbInstanceType` (the primary
+  datastore resource's fields, blank when it has none), `lastUpdatedDate`,
+  `verifiedBy`, `verificationDate`, `name`, `runtime`, `softwareFramework`,
+  `dataClassification`, `financeProduct`.
 
 Toggle columns (or use all / defaults / none); the preview updates live. Copy or
 download `service-mesh.csv`. Multi-valued cells are `;`-joined; values are
 RFC 4180-quoted only when they contain a comma/quote/newline.
+
+A **one row per region** toggle explodes each service into one row per distinct
+resource region; the resource-derived columns (`resources.*`, `db*`, replica /
+cpu / memory) then scope to that row's region, and the `region` column holds the
+row's single region. Services with no resources — or resources without a region —
+still emit a single row.
 
 ## Stack
 

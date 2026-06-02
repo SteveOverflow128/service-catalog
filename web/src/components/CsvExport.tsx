@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
-import { CSV_FIELDS, DEFAULT_CSV_FIELDS, toCsv, type CsvField } from '../data/csv';
+import { CSV_FIELDS, DEFAULT_CSV_FIELDS, csvRowCount, toCsv, type CsvField } from '../data/csv';
 import { CheckIcon, CloseIcon, CopyIcon, DownloadIcon } from './icons';
 
 function FieldChip({ field, on, onToggle }: { field: CsvField; on: boolean; onToggle: () => void }) {
@@ -35,6 +35,7 @@ export function CsvExport({
 }) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(DEFAULT_CSV_FIELDS));
   const [copied, setCopied] = useState(false);
+  const [byRegion, setByRegion] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -42,9 +43,9 @@ export function CsvExport({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const csv = useMemo(() => toCsv(index, services, selected), [index, services, selected]);
+  const csv = useMemo(() => toCsv(index, services, selected, byRegion), [index, services, selected, byRegion]);
   const colCount = selected.size;
-  const rowCount = services.length;
+  const rowCount = csvRowCount(services, byRegion);
 
   const toggle = (k: string) =>
     setSelected((prev) => {
@@ -101,6 +102,18 @@ export function CsvExport({
         </header>
 
         <div className="csv-picker">
+          <span className="csv-group__label overline">Rows</span>
+          <div className="csv-group">
+            <button
+              className={`csv-field ${byRegion ? 'csv-field--on' : ''}`}
+              onClick={() => setByRegion((v) => !v)}
+              aria-pressed={byRegion}
+              title="Emit one row per resource region; resource columns scope to that region."
+            >
+              <span className="csv-field__box">{byRegion && <CheckIcon width={11} height={11} />}</span>
+              <span className="csv-field__key mono">one row per region</span>
+            </button>
+          </div>
           <div className="csv-picker__bar">
             <span className="overline">Columns</span>
             <div className="csv-picker__quick">
@@ -137,7 +150,9 @@ export function CsvExport({
         )}
 
         <footer className="modal__foot">
-          <span className="modal__hint mono">{rowCount} services · one row each</span>
+          <span className="modal__hint mono">
+            {byRegion ? `${rowCount} rows · one per region` : `${rowCount} services · one row each`}
+          </span>
           <div className="modal__actions">
             <button className="btn" onClick={download} disabled={colCount === 0}>
               <DownloadIcon width={15} height={15} />
