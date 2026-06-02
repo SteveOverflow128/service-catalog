@@ -21,6 +21,7 @@ dev = [
 
 [project.scripts]
 service-catalog-validate = "service_catalog_validator.cli:main"
+service-catalog-migrate = "service_catalog_validator.migrate_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
