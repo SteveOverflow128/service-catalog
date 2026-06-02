@@ -75,3 +75,58 @@ def test_input_not_mutated():
     snapshot = copy.deepcopy(src)
     migrate_document(src)
     assert src == snapshot
+
+
+# --- Stage-1 docs: already on `resources`, but with the older instance-count name ---
+
+
+def test_resources_only_primary_instance_count_migrates():
+    src = {"serviceId": "x", "resources": [
+        {"provider": "aws", "type": "rds", "purpose": "p", "primaryInstanceCount": 3},
+    ]}
+    doc, status = migrate_document(src)
+    assert status is MigrationStatus.MIGRATED
+    item = doc["resources"][0]
+    assert "primaryInstanceCount" not in item
+    assert item["dbInstanceCount"] == 3
+    assert item["provider"] == "aws"  # left untouched, not re-derived
+
+
+def test_resources_only_rds_primary_instance_count_migrates():
+    src = {"resources": [{"provider": "aws", "type": "rds", "purpose": "p", "rdsPrimaryInstanceCount": 1}]}
+    doc, status = migrate_document(src)
+    assert status is MigrationStatus.MIGRATED
+    assert doc["resources"][0]["dbInstanceCount"] == 1
+
+
+def test_resources_only_does_not_synthesize_provider():
+    src = {"resources": [{"type": "rds", "purpose": "p", "primaryInstanceCount": 1}]}
+    doc, status = migrate_document(src)
+    assert status is MigrationStatus.MIGRATED
+    assert "provider" not in doc["resources"][0]
+    assert doc["resources"][0]["dbInstanceCount"] == 1
+
+
+def test_resources_only_already_db_instance_count_is_unchanged():
+    src = {"resources": [{"provider": "aws", "type": "rds", "purpose": "p", "dbInstanceCount": 3}]}
+    doc, status = migrate_document(src)
+    assert status is MigrationStatus.UNCHANGED
+    assert doc == src
+
+
+def test_both_legacy_stages_converge():
+    stage0 = {"awsServices": [{"type": "rds", "purpose": "p", "rdsPrimaryInstanceCount": 2}]}
+    stage1 = {"resources": [{"provider": "aws", "type": "rds", "purpose": "p", "primaryInstanceCount": 2}]}
+    from_stage0, _ = migrate_document(stage0)
+    from_stage1, st1 = migrate_document(stage1)
+    assert st1 is MigrationStatus.MIGRATED
+    assert from_stage0["resources"][0]["dbInstanceCount"] == 2
+    assert from_stage1["resources"][0]["dbInstanceCount"] == 2
+
+
+def test_stage1_migration_is_idempotent():
+    src = {"resources": [{"provider": "aws", "type": "rds", "purpose": "p", "primaryInstanceCount": 2}]}
+    once, _ = migrate_document(src)
+    twice, status = migrate_document(once)
+    assert status is MigrationStatus.UNCHANGED
+    assert twice == once
