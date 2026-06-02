@@ -8,6 +8,6 @@
   "repository": "https://example.com",
   "dataClassification": "INTERNAL",
   "resources": [
-    { "provider": "aws", "type": "rds", "purpose": "x", "drStrategy": "activeactive" }
+    { "type": "rds", "purpose": "x" }
   ]
 }

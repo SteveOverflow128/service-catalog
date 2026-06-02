@@ -60,7 +60,7 @@ def test_bad_dr_strategy_enum_returns_error(schema):
 
 
 def test_bad_top_level_dr_strategy_enum_returns_error(schema):
-    """Top-level drStrategy has a different enum from awsServices[].drStrategy."""
+    """Top-level drStrategy has a different enum from resources[].drStrategy."""
     data = load_invalid("bad-top-level-dr-strategy-enum.json")
     errors = check_against_schema(data, schema)
     assert any("drStrategy" in e for e in errors)
@@ -94,3 +94,15 @@ def test_bad_date_format_returns_error(schema, minimal_example):
     bad["lastUpdatedDate"] = "06-01-2026"  # MM-DD-YYYY, not an ISO date
     errors = check_against_schema(bad, schema)
     assert any("lastUpdatedDate" in e or "date" in e.lower() for e in errors), errors
+
+
+def test_missing_resource_provider_returns_error(schema):
+    data = load_invalid("missing-resource-provider.json")
+    errors = check_against_schema(data, schema)
+    assert any("provider" in e for e in errors), errors
+
+
+def test_bad_resource_provider_enum_returns_error(schema):
+    data = load_invalid("bad-resource-provider-enum.json")
+    errors = check_against_schema(data, schema)
+    assert any("provider" in e for e in errors), errors

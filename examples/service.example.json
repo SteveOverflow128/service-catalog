@@ -34,10 +34,11 @@
     "newRelicDashboardURL": "https://one.newrelic.com/dashboards/task-service"
   },
 
-  "awsServices": [
-    { "type": "rds", "purpose": "Primary OLTP store for tasks and assignments", "engine": "postgres", "version": "16.2", "drStrategy": "startRestoreFromBackup" },
-    { "type": "sqs", "purpose": "Async task-event queue for notifications", "drStrategy": "startEmpty" },
-    { "type": "s3",  "purpose": "Task attachment storage",                  "drStrategy": "startWithReplicatedData" }
+  "resources": [
+    { "provider": "aws",     "type": "rds",          "purpose": "Primary OLTP store for tasks and assignments", "engine": "postgres", "version": "16.2", "drStrategy": "startRestoreFromBackup" },
+    { "provider": "aws",     "type": "sqs",          "purpose": "Async task-event queue for notifications",      "drStrategy": "startEmpty" },
+    { "provider": "azure",   "type": "blob-storage", "purpose": "Task attachment storage",                       "drStrategy": "startWithReplicatedData" },
+    { "provider": "on-prem", "type": "vm",           "purpose": "Legacy batch reconciliation worker",            "instanceType": "8c/32g" }
   ],
 
   "datastores": [

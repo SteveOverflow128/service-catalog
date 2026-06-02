@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://service-catalog.internal/schemas/service-catalog.schema.json",
   "title": "Service Catalog Entry",
-  "description": "Identity, ownership, operational, AWS, data, and dependency metadata for one service.",
+  "description": "Identity, ownership, operational, resource, data, and dependency metadata for one service.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -38,13 +38,15 @@
 
     "dataClassification": { "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"] },
 
-    "awsServices": {
+    "resources": {
       "type": "array",
+      "description": "Provider-managed resources and on-prem equivalents this service provisions or runs on.",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["type", "purpose"],
+        "required": ["provider", "type", "purpose"],
         "properties": {
+          "provider":     { "enum": ["aws", "azure", "on-prem"] },
           "type":         { "type": "string", "minLength": 1 },
           "purpose":      { "type": "string", "minLength": 1 },
           "engine":       { "type": "string" },
@@ -53,7 +55,7 @@
           "drStrategy": {
             "enum": ["none", "startEmpty", "startRestoreFromBackup", "startWithReplicatedData", "activeActive", "unknown"]
           },
-          "rdsPrimaryInstanceCount": { "type": "integer", "minimum": 0 },
+          "primaryInstanceCount": { "type": "integer", "minimum": 0 },
           "minReplicas":    { "type": "integer", "minimum": 0 },
           "maxReplicas":    { "type": "integer", "minimum": 0 },
           "cpuRequest":     { "type": "string" },
