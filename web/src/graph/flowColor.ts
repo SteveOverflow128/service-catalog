@@ -19,7 +19,7 @@ const INTERACTION_COLORS: Record<string, string> = {
   soap: '#b0884f',
   infrastructure: '#7d8ba1',
 };
-const INTERACTION_FALLBACK = '#7d8ba1';
+const INTERACTION_FALLBACK = '#9aa7b8';
 
 const BRANCH_PALETTE = [
   '#519ee6', '#FF9F45', '#4FD6A0', '#8f87e0', '#FF4D5E',

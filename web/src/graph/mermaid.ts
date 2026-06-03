@@ -99,7 +99,7 @@ export function toMermaid(
  *  Uses realId as the row identifier so external node ids are preserved verbatim. */
 export function toMermaidSankey(layout: FlowLayout): string {
   const labelOf = new Map(layout.nodes.map((n) => [n.id, n.isGhost ? `${n.realId} (loop)` : n.realId]));
-  const clean = (s: string) => s.replace(/[",]/g, ' ').trim();
+  const clean = (s: string) => s.replace(/[",\n\r]/g, ' ').trim();
   const rows = layout.links.map((l) => {
     const src = clean(labelOf.get(l.source) ?? l.source);
     const tgt = clean(labelOf.get(l.target) ?? l.target);

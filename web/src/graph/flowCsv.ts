@@ -2,7 +2,7 @@ import type { FlowLayout, FlowNode } from './flow';
 
 function esc(v: string | number | boolean): string {
   const s = String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 /** Edge-list CSV of the current flow: one row per link. `hop` = target column
