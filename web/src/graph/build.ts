@@ -12,9 +12,9 @@ function nodeSize(deg: number, isRoot: boolean): number {
   return isRoot ? Math.max(46, base + 8) : base;
 }
 
-function buildNode(index: CatalogIndex, id: string, rootId: string): ElementDefinition {
+function buildNode(index: CatalogIndex, id: string, roots: ReadonlySet<string>): ElementDefinition {
   const node = index.node(id);
-  const isRoot = id === rootId;
+  const isRoot = roots.has(id);
   const deg = degree(index, id);
 
   if (node?.kind === 'service') {
@@ -76,25 +76,26 @@ function buildEdge(e: Edge, i: number): ElementDefinition {
   };
 }
 
-/** Render an explicit node-id set + edge list into cytoscape elements. `rootId`
- *  (if any) gets the enlarged "root" treatment; pass '__none__' for rootless
- *  subgraphs like mesh slices that have many seed services rather than one. */
+const NO_ROOTS: ReadonlySet<string> = new Set();
+
+/** Render an explicit node-id set + edge list into cytoscape elements. Ids in
+ *  `roots` get the enlarged "root" treatment; pass an empty set for rootless
+ *  subgraphs like the full mesh. */
 export function buildSubgraphElements(
   index: CatalogIndex,
   nodeIds: Set<string>,
   edges: Edge[],
-  rootId = '__none__',
+  roots: ReadonlySet<string> = NO_ROOTS,
 ): ElementDefinition[] {
-  const nodes = [...nodeIds].map((id) => buildNode(index, id, rootId));
+  const nodes = [...nodeIds].map((id) => buildNode(index, id, roots));
   return [...nodes, ...edges.map((e, i) => buildEdge(e, i))];
 }
 
 export function buildEgoElements(index: CatalogIndex, ego: EgoGraph): ElementDefinition[] {
-  return buildSubgraphElements(index, ego.nodes, ego.edges, ego.rootId);
+  return buildSubgraphElements(index, ego.nodes, ego.edges, new Set([ego.rootId]));
 }
 
-/** Full, unfiltered mesh: every catalogued service + external stub, all edges.
- *  Sliced/neighborhood views build from {@link buildSubgraphElements} instead. */
+/** Full, unfiltered mesh: every catalogued service + external stub, all edges. */
 export function buildMeshElements(index: CatalogIndex): ElementDefinition[] {
   const ids = new Set<string>();
   for (const s of index.services) ids.add(s.serviceId);
