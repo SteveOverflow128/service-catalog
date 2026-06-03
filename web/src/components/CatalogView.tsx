@@ -4,7 +4,7 @@ import type { Service } from '../types';
 import { Filters, matchesFilters, matchesQuery, type FilterState } from './Filters';
 import { ServiceCard } from './ServiceCard';
 import { CsvExport } from './CsvExport';
-import { TableIcon } from './icons';
+import { CheckIcon, TableIcon } from './icons';
 import type { Facets } from '../data/catalog';
 
 type Sort = 'criticality' | 'name' | 'dependants' | 'dependencies';
@@ -104,17 +104,21 @@ export function CatalogView({
               </button>
             ))}
           </div>
-          <button
-            className={`sortbtn${selectMode ? ' sortbtn--on' : ''}`}
-            onClick={toggleSelectMode}
-            aria-pressed={selectMode}
-          >
-            {selectMode ? '☑ ' : ''}Select multiple
-          </button>
-          <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export current results as CSV">
-            <TableIcon width={15} height={15} />
-            <span>Export CSV</span>
-          </button>
+          <div className="results__actions">
+            <button
+              className={`exportbtn${selectMode ? ' exportbtn--on' : ''}`}
+              onClick={toggleSelectMode}
+              aria-pressed={selectMode}
+              title="Select multiple services to map together"
+            >
+              <CheckIcon width={15} height={15} />
+              <span>Select multiple</span>
+            </button>
+            <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export current results as CSV">
+              <TableIcon width={15} height={15} />
+              <span>Export CSV</span>
+            </button>
+          </div>
         </div>
 
         {selectMode && (

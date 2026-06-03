@@ -1271,6 +1271,18 @@ code.mono {
   border-color: var(--accent);
   background: var(--surface-raised);
 }
+/* Toggled-on state (e.g. the "Select multiple" action). */
+.exportbtn--on {
+  color: var(--text-hi);
+  border-color: var(--accent);
+  background: var(--surface-raised);
+}
+/* Right-aligned cluster of header action buttons (Select multiple, Export CSV…). */
+.results__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .mesh__headright {
   display: flex;
   align-items: flex-end;
