@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useCatalog } from './data/useCatalog';
-import { deriveFacets } from './data/catalog';
+import { deriveFacets, type CatalogIndex } from './data/catalog';
 import { parseHash, viewToHash, type AppView } from './data/routing';
 import { TopBar } from './components/TopBar';
 import { CatalogView } from './components/CatalogView';
@@ -9,19 +9,30 @@ import { ServiceDetail } from './components/ServiceDetail';
 import { ServiceDetailPage } from './components/ServiceDetailPage';
 import { DependencyMap } from './components/DependencyMap';
 import { RootsSidebar } from './components/RootsSidebar';
+import { FlowView } from './components/FlowView';
 import { emptyFilters, type FilterState } from './components/Filters';
 import { ArrowRight } from './components/icons';
+
+function busiestHub(index: CatalogIndex): string {
+  let best = index.services[0]?.serviceId ?? '';
+  let bestScore = -1;
+  for (const s of index.services) {
+    const score = index.dependencyCount(s.serviceId) + index.dependantCount(s.serviceId);
+    if (score > bestScore) { bestScore = score; best = s.serviceId; }
+  }
+  return best;
+}
 
 export default function App() {
   const state = useCatalog();
   const [view, setView] = useState<AppView>(() => parseHash(window.location.hash));
-  const [lastTopView, setLastTopView] = useState<'catalog' | 'mesh'>('catalog');
+  const [lastTopView, setLastTopView] = useState<'catalog' | 'mesh' | 'flow'>('catalog');
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
 
   // Remember the last top-level view so "back" from a map/detail returns there.
   useEffect(() => {
-    if (view.kind === 'catalog' || view.kind === 'mesh') setLastTopView(view.kind);
+    if (view.kind === 'catalog' || view.kind === 'mesh' || view.kind === 'flow') setLastTopView(view.kind);
   }, [view]);
 
   // state -> hash
@@ -50,6 +61,7 @@ export default function App() {
   const clearFilters = useCallback(() => setFilters(emptyFilters()), []);
 
   const openDetail = useCallback((id: string) => setView({ kind: 'detail', id }), []);
+  const openFlow = useCallback((id: string) => setView({ kind: 'flow', rootId: id }), []);
   const openMap = useCallback((ids: string[]) => {
     if (ids.length) setView({ kind: 'map', rootIds: ids });
   }, []);
@@ -69,7 +81,10 @@ export default function App() {
       return rootIds.length ? { kind: 'map', rootIds } : { kind: 'catalog' };
     });
   }, []);
-  const goBack = useCallback(() => setView({ kind: lastTopView }), [lastTopView]);
+  const goBack = useCallback(
+    () => setView(lastTopView === 'flow' ? { kind: 'catalog' } : { kind: lastTopView }),
+    [lastTopView],
+  );
 
   const changeTopView = useCallback((v: 'catalog' | 'mesh') => setView({ kind: v }), []);
 
@@ -112,6 +127,11 @@ export default function App() {
   const detailService = view.kind === 'detail' ? index.byId.get(view.id) : undefined;
   // Only catalogued ids can seed a map.
   const mapRootIds = view.kind === 'map' ? view.rootIds.filter((id) => index.byId.has(id)) : [];
+  // Validated flow root: fall back to busiest hub if the stored id is not in the catalog.
+  const flowRootId =
+    view.kind === 'flow'
+      ? (index.byId.has(view.rootId) ? view.rootId : busiestHub(index))
+      : '';
 
   return (
     <div className="app">
@@ -119,8 +139,10 @@ export default function App() {
       <TopBar
         query={query}
         onQuery={handleQuery}
-        view={view.kind === 'mesh' ? 'mesh' : 'catalog'}
-        onView={changeTopView}
+        view={view.kind === 'mesh' ? 'mesh' : view.kind === 'flow' ? 'flow' : 'catalog'}
+        onView={(v) =>
+          v === 'flow' ? setView({ kind: 'flow', rootId: busiestHub(index) }) : changeTopView(v)
+        }
         serviceCount={index.services.length}
       />
 
@@ -168,6 +190,17 @@ export default function App() {
                 onToggleRoot={toggleRoot}
               />
             </div>
+          </div>
+        ) : view.kind === 'flow' && flowRootId ? (
+          <div className="detail" key={`flow-${flowRootId}`}>
+            <div className="detail__bar">
+              <button className="backbtn" onClick={goBack}>
+                <ArrowRight width={14} height={14} className="backbtn__ico" />
+                <span>{lastTopView === 'mesh' ? 'Mesh' : 'Catalog'}</span>
+              </button>
+              <span className="detail__crumb mono">/ flow / {flowRootId}</span>
+            </div>
+            <FlowView index={index} rootId={flowRootId} onReroot={openFlow} />
           </div>
         ) : view.kind === 'mesh' ? (
           <MeshView index={index} onSelectNode={reroot} />
