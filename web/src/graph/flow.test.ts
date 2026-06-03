@@ -42,23 +42,28 @@ describe('buildFlowLayout — layering', () => {
 describe('buildFlowLayout — ghosting', () => {
   it('breaks a cycle into a terminal ghost', () => {
     const layout = buildFlowLayout(makeCyclicIndex(), 'a', { mode: 'dependencies', depth: 0, ...OPTS });
-    const ghost = layout.nodes.find((n) => n.isGhost);
+    const ghost = layout.nodes.find((n) => n.isGhost && n.realId === 'a')!;
     expect(ghost).toBeTruthy();
-    expect(ghost!.realId).toBe('a');           // b -> a loops back to root
-    expect(ghost!.column).toBe(2);             // placed at source(b=1).column + 1
+    expect(ghost.realId).toBe('a');           // b -> a loops back to root
+    expect(ghost.column).toBe(2);             // placed at source(b=1).column + 1
     // ghost is terminal: no link leaves it
-    expect(layout.links.some((l) => l.source === ghost!.id)).toBe(false);
+    expect(layout.links.some((l) => l.source === ghost.id)).toBe(false);
     // the closing link is flagged
-    const closing = layout.links.find((l) => l.target === ghost!.id);
+    const closing = layout.links.find((l) => l.target === ghost.id);
     expect(closing!.isBackEdge).toBe(true);
   });
 
-  it('keeps a cross-layer dependency as a single forward band', () => {
+  it('ghosts a same-layer edge instead of drawing a same-column band', () => {
     const layout = buildFlowLayout(makeCyclicIndex(), 'a', { mode: 'dependencies', depth: 0, ...OPTS });
-    // a->c and b->c: c (col 1) has two real incoming bands, not a ghost
-    const intoC = layout.links.filter((l) => l.target === 'c');
-    expect(intoC.length).toBe(2);
-    expect(intoC.every((l) => l.isBackEdge === false)).toBe(true);
+    // b and c are both at hop 1; b->c does not go strictly left->right, so it
+    // becomes a ghost re-entry rather than a degenerate same-column band.
+    const intoRealC = layout.links.filter((l) => l.target === 'c');
+    expect(intoRealC.length).toBe(1);                 // only a->c is a real forward band
+    expect(intoRealC[0].isBackEdge).toBe(false);
+    const ghostC = layout.nodes.find((n) => n.isGhost && n.realId === 'c');
+    expect(ghostC).toBeTruthy();
+    const bToGhostC = layout.links.find((l) => l.source === 'b' && l.target === ghostC!.id);
+    expect(bToGhostC!.isBackEdge).toBe(true);
   });
 
   it('tags each link with its first-hop branch', () => {

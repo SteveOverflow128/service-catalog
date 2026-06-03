@@ -114,7 +114,7 @@ function classify(index: CatalogIndex, col: Map<string, number>, branch: Map<str
     const farther = fartherIsTarget ? e.to : e.from;
     const branchOf = branch.get(farther) || branch.get(e.from) || e.from;
 
-    if (cf <= ct) {
+    if (cf < ct) {
       links.push({
         source: e.from, target: e.to, edge: e, weight: 1, branch: branchOf,
         isBackEdge: false, sy0: 0, sy1: 0, ty0: 0, ty1: 0,
