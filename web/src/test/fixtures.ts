@@ -30,3 +30,18 @@ export function makeIndex(): CatalogIndex {
   const catalog: Catalog = { generatedFrom: 'test', count: services.length, services };
   return new CatalogIndex(catalog);
 }
+
+/** Graph with a cycle and a shared leaf:
+ *    a -> b -> a   (cycle back to root)
+ *    a -> c -> ext-x
+ *    b -> c        (shared: c has two in-edges)
+ */
+export function makeCyclicIndex(): CatalogIndex {
+  const services: Service[] = [
+    makeService({ serviceId: 'a', dependencies: [dep('b'), dep('c')] }),
+    makeService({ serviceId: 'b', dependencies: [dep('a'), dep('c')] }),
+    makeService({ serviceId: 'c', dependencies: [dep('ext-x', true)] }),
+  ];
+  const catalog: Catalog = { generatedFrom: 'test', count: services.length, services };
+  return new CatalogIndex(catalog);
+}
