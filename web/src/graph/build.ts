@@ -1,5 +1,5 @@
 import type { ElementDefinition, LayoutOptions } from 'cytoscape';
-import type { CatalogIndex, EgoGraph } from '../data/catalog';
+import type { CatalogIndex } from '../data/catalog';
 import type { Edge } from '../types';
 import { edgeColors, interactionStyle, tierStyle } from '../design/tokens';
 
@@ -89,10 +89,6 @@ export function buildSubgraphElements(
 ): ElementDefinition[] {
   const nodes = [...nodeIds].map((id) => buildNode(index, id, roots));
   return [...nodes, ...edges.map((e, i) => buildEdge(e, i))];
-}
-
-export function buildEgoElements(index: CatalogIndex, ego: EgoGraph): ElementDefinition[] {
-  return buildSubgraphElements(index, ego.nodes, ego.edges, new Set([ego.rootId]));
 }
 
 /** Full, unfiltered mesh: every catalogued service + external stub, all edges. */
