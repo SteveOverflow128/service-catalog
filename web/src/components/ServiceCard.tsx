@@ -104,7 +104,7 @@ export function ServiceCard({
               tabIndex={0}
               aria-label={`View ${service.name} flow`}
             >
-              <FlowIcon width={13} height={13} />
+              flow <FlowIcon width={13} height={13} />
             </button>
           </>
         )}

@@ -154,6 +154,7 @@ export default function App() {
             index={index}
             onBack={goBack}
             onOpenMap={reroot}
+            onOpenFlow={openFlow}
             onSelectNode={openDetail}
           />
         ) : view.kind === 'map' && mapRootIds.length > 0 ? (

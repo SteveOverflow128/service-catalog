@@ -10,6 +10,7 @@ import {
   CloudIcon,
   DatabaseIcon,
   ExternalIcon,
+  FlowIcon,
   LayersIcon,
   ShieldIcon,
   WarnIcon,
@@ -340,12 +341,14 @@ export function ServiceDetailPage({
   index,
   onBack,
   onOpenMap,
+  onOpenFlow,
   onSelectNode,
 }: {
   service: Service;
   index: CatalogIndex;
   onBack: () => void;
   onOpenMap: (id: string) => void;
+  onOpenFlow?: (id: string) => void;
   onSelectNode: (id: string) => void;
 }) {
   const [jsonOpen, setJsonOpen] = useState(false);
@@ -376,6 +379,12 @@ export function ServiceDetailPage({
             Map View
             <ArrowRight width={13} height={13} />
           </button>
+          {onOpenFlow && (
+            <button className="btn" onClick={() => onOpenFlow(service.serviceId)}>
+              Flow View
+              <FlowIcon width={13} height={13} />
+            </button>
+          )}
           <button className="btn" onClick={() => setVerifyOpen(true)}>
             <CheckIcon width={14} height={14} />
             Verify
