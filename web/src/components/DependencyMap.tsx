@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { CatalogIndex } from '../data/catalog';
 import type { Depth, MapMode } from '../types';
-import { buildEgoElements, dagreLayout } from '../graph/build';
+import { buildSubgraphElements, dagreLayout } from '../graph/build';
 import { toMermaid } from '../graph/mermaid';
 import { GraphCanvas } from './GraphCanvas';
 import { Legend } from './Legend';
@@ -23,41 +23,47 @@ const DEPTHS: { key: Depth; label: string }[] = [
 
 export function DependencyMap({
   index,
-  rootId,
-  onSelectNode,
+  rootIds,
+  onReroot,
+  onToggleRoot,
 }: {
   index: CatalogIndex;
-  rootId: string;
-  onSelectNode: (id: string) => void;
+  rootIds: string[];
+  /** plain click on a node → make it the sole root */
+  onReroot: (id: string) => void;
+  /** ⌘/Ctrl+click on a node → add/remove it from the root set */
+  onToggleRoot: (id: string) => void;
 }) {
   const [mode, setMode] = useState<MapMode>('both');
-  // Depth 1 (immediate neighborhood) keeps the default map readable even for
-  // services wired to mega-hubs like auth-service (49 dependants); 2/All expand.
   const [depth, setDepth] = useState<Depth>(1);
   const [exporting, setExporting] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
 
-  const ego = useMemo(() => index.ego(rootId, mode, depth), [index, rootId, mode, depth]);
-  const elements = useMemo(() => buildEgoElements(index, ego), [index, ego]);
+  const rootSet = useMemo(() => new Set(rootIds), [rootIds]);
+  const ego = useMemo(() => index.egoSet(rootSet, mode, depth), [index, rootSet, mode, depth]);
+  const elements = useMemo(
+    () => buildSubgraphElements(index, ego.nodes, ego.edges, rootSet),
+    [index, ego, rootSet],
+  );
 
-  // Catalog services in the current neighborhood (externals have no full record).
   const egoServices = useMemo(
     () => [...ego.nodes].map((id) => index.byId.get(id)).filter((s): s is NonNullable<typeof s> => !!s),
     [ego, index],
   );
 
   const depthLabel = depth === 0 ? 'all hops' : `${depth} hop${depth === 1 ? '' : 's'}`;
-  const mermaid = () =>
-    toMermaid(index, ego.nodes, ego.edges, {
-      rootId,
-      title: `${index.byId.get(rootId)?.name ?? rootId} — ${mode} · ${depthLabel}`,
-    });
+  const rootLabel =
+    rootIds.length === 1 ? index.byId.get(rootIds[0])?.name ?? rootIds[0] : `${rootIds.length} services`;
+  const exportSlug =
+    rootIds.length === 1 ? rootIds[0] : `${rootIds.length}roots`;
 
   const criticalEdges = ego.edges.filter((e) => e.dep.critical).length;
   const externalNodes = [...ego.nodes].filter((id) => !index.byId.has(id)).length;
 
-  const handleNodeClick = (id: string) => {
-    if (index.byId.has(id)) onSelectNode(id);
+  const handleNodeClick = (id: string, ev: MouseEvent) => {
+    if (!index.byId.has(id)) return; // externals can't be roots
+    if (ev && (ev.metaKey || ev.ctrlKey)) onToggleRoot(id);
+    else onReroot(id);
   };
 
   return (
@@ -92,30 +98,14 @@ export function DependencyMap({
         </div>
 
         <div className="mapstats mono">
-          <span>
-            <b>{ego.nodes.size}</b> nodes
-          </span>
-          <span>
-            <b>{ego.edges.length}</b> edges
-          </span>
-          {criticalEdges > 0 && (
-            <span className="mapstats__crit">
-              <b>{criticalEdges}</b> critical
-            </span>
-          )}
-          {externalNodes > 0 && (
-            <span className="mapstats__ext">
-              <b>{externalNodes}</b> external
-            </span>
-          )}
+          <span><b>{ego.nodes.size}</b> nodes</span>
+          <span><b>{ego.edges.length}</b> edges</span>
+          {criticalEdges > 0 && <span className="mapstats__crit"><b>{criticalEdges}</b> critical</span>}
+          {externalNodes > 0 && <span className="mapstats__ext"><b>{externalNodes}</b> external</span>}
         </div>
 
         <div className="mesh__exports">
-          <button
-            className="exportbtn"
-            onClick={() => setExportingCsv(true)}
-            title="Export the services in this map as a CSV"
-          >
+          <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export the services in this map as a CSV">
             <TableIcon width={15} height={15} />
             <span>Export CSV</span>
           </button>
@@ -132,16 +122,16 @@ export function DependencyMap({
             <div className="graph-empty__ring" />
             <p>
               No {mode === 'dependants' ? 'dependants' : mode === 'dependencies' ? 'dependencies' : 'connections'}{' '}
-              recorded for this service.
+              recorded for {rootIds.length === 1 ? 'this service' : 'these services'}.
             </p>
-            <span className="overline">a leaf node in the mesh</span>
+            <span className="overline">tip: ⌘/Ctrl-click a node to add it as a root</span>
           </div>
         ) : (
           <GraphCanvas
             elements={elements}
             layout={dagreLayout}
             onNodeClick={handleNodeClick}
-            layoutKey={`${rootId}:${mode}:${depth}`}
+            layoutKey={`${rootIds.join(',')}:${mode}:${depth}`}
           />
         )}
         <Legend />
@@ -149,9 +139,12 @@ export function DependencyMap({
 
       {exporting && (
         <MermaidExport
-          title={`${index.byId.get(rootId)?.name ?? rootId} · ${mode} · ${depthLabel}`}
-          filename={`${rootId}-${mode}-${depth === 0 ? 'all' : depth + 'hop'}.mmd`}
-          code={mermaid()}
+          title={`${rootLabel} · ${mode} · ${depthLabel}`}
+          filename={`${exportSlug}-${mode}-${depth === 0 ? 'all' : depth + 'hop'}.mmd`}
+          code={toMermaid(index, ego.nodes, ego.edges, {
+            rootIds,
+            title: `${rootLabel} — ${mode} · ${depthLabel}`,
+          })}
           onClose={() => setExporting(false)}
         />
       )}
@@ -160,8 +153,8 @@ export function DependencyMap({
         <CsvExport
           index={index}
           services={egoServices}
-          title={`Export ${index.byId.get(rootId)?.name ?? rootId} map as CSV`}
-          filename={`${rootId}-${mode}-${depth === 0 ? 'all' : depth + 'hop'}.csv`}
+          title={`Export ${rootLabel} map as CSV`}
+          filename={`${exportSlug}-${mode}-${depth === 0 ? 'all' : depth + 'hop'}.csv`}
           onClose={() => setExportingCsv(false)}
         />
       )}

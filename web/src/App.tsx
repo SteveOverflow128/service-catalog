@@ -1,60 +1,38 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useCatalog } from './data/useCatalog';
 import { deriveFacets } from './data/catalog';
-import { TopBar, type View } from './components/TopBar';
+import { parseHash, viewToHash, type AppView } from './data/routing';
+import { TopBar } from './components/TopBar';
 import { CatalogView } from './components/CatalogView';
 import { MeshView } from './components/MeshView';
 import { ServiceDetail } from './components/ServiceDetail';
 import { ServiceDetailPage } from './components/ServiceDetailPage';
 import { DependencyMap } from './components/DependencyMap';
+import { RootsSidebar } from './components/RootsSidebar';
 import { emptyFilters, type FilterState } from './components/Filters';
 import { ArrowRight } from './components/icons';
 
-type DetailMode = 'page' | 'map';
-
-/** Parse the URL hash into view + selected service + detail mode for shareable
- *  deep links:
- *  `#/`              catalog
- *  `#/mesh`          mesh
- *  `#/d/<serviceId>` full detail page
- *  `#/s/<serviceId>` dependency map view  */
-function readHash(): { view: View; selectedId: string | null; detailMode: DetailMode } {
-  const h = window.location.hash.replace(/^#\/?/, '');
-  if (h === 'mesh') return { view: 'mesh', selectedId: null, detailMode: 'page' };
-  if (h.startsWith('d/')) return { view: 'catalog', selectedId: decodeURIComponent(h.slice(2)), detailMode: 'page' };
-  if (h.startsWith('s/')) return { view: 'catalog', selectedId: decodeURIComponent(h.slice(2)), detailMode: 'map' };
-  return { view: 'catalog', selectedId: null, detailMode: 'page' };
-}
-
 export default function App() {
   const state = useCatalog();
-  const initial = readHash();
-  const [view, setView] = useState<View>(initial.view);
+  const [view, setView] = useState<AppView>(() => parseHash(window.location.hash));
+  const [lastTopView, setLastTopView] = useState<'catalog' | 'mesh'>('catalog');
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
-  const [selectedId, setSelectedId] = useState<string | null>(initial.selectedId);
-  const [detailMode, setDetailMode] = useState<DetailMode>(initial.detailMode);
+
+  // Remember the last top-level view so "back" from a map/detail returns there.
+  useEffect(() => {
+    if (view.kind === 'catalog' || view.kind === 'mesh') setLastTopView(view.kind);
+  }, [view]);
 
   // state -> hash
   useEffect(() => {
-    const target = selectedId
-      ? detailMode === 'page'
-        ? `#/d/${encodeURIComponent(selectedId)}`
-        : `#/s/${encodeURIComponent(selectedId)}`
-      : view === 'mesh'
-        ? '#/mesh'
-        : '#/';
+    const target = viewToHash(view);
     if (window.location.hash !== target) window.history.replaceState(null, '', target);
-  }, [view, selectedId, detailMode]);
+  }, [view]);
 
   // hash -> state
   useEffect(() => {
-    const onHash = () => {
-      const r = readHash();
-      setView(r.view);
-      setSelectedId(r.selectedId);
-      setDetailMode(r.detailMode);
-    };
+    const onHash = () => setView(parseHash(window.location.hash));
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -71,31 +49,30 @@ export default function App() {
 
   const clearFilters = useCallback(() => setFilters(emptyFilters()), []);
 
-  /** Card click → full detail page */
-  const open = useCallback((id: string) => {
-    setSelectedId(id);
-    setDetailMode('page');
+  const openDetail = useCallback((id: string) => setView({ kind: 'detail', id }), []);
+  const reroot = useCallback((id: string) => setView({ kind: 'map', rootIds: [id] }), []);
+  const toggleRoot = useCallback((id: string) => {
+    setView((v) => {
+      if (v.kind !== 'map') return { kind: 'map', rootIds: [id] };
+      const has = v.rootIds.includes(id);
+      const rootIds = has ? v.rootIds.filter((r) => r !== id) : [...v.rootIds, id];
+      return rootIds.length ? { kind: 'map', rootIds } : { kind: 'catalog' };
+    });
   }, []);
-
-  /** "Map →" click or graph node click → dependency map view */
-  const openInMap = useCallback((id: string) => {
-    setSelectedId(id);
-    setDetailMode('map');
+  const removeRoot = useCallback((id: string) => {
+    setView((v) => {
+      if (v.kind !== 'map') return v;
+      const rootIds = v.rootIds.filter((r) => r !== id);
+      return rootIds.length ? { kind: 'map', rootIds } : { kind: 'catalog' };
+    });
   }, []);
+  const goBack = useCallback(() => setView({ kind: lastTopView }), [lastTopView]);
 
-  const closeDetail = useCallback(() => setSelectedId(null), []);
-
-  const changeView = useCallback((v: View) => {
-    setView(v);
-    setSelectedId(null);
-  }, []);
+  const changeTopView = useCallback((v: 'catalog' | 'mesh') => setView({ kind: v }), []);
 
   const handleQuery = useCallback((q: string) => {
     setQuery(q);
-    if (q) {
-      setView('catalog');
-      setSelectedId(null);
-    }
+    if (q) setView({ kind: 'catalog' });
   }, []);
 
   if (state.status === 'loading') {
@@ -128,7 +105,10 @@ export default function App() {
 
   const { index } = state;
   const facets = deriveFacets(index.services);
-  const selected = selectedId ? index.byId.get(selectedId) : undefined;
+
+  const detailService = view.kind === 'detail' ? index.byId.get(view.id) : undefined;
+  // Only catalogued ids can seed a map.
+  const mapRootIds = view.kind === 'map' ? view.rootIds.filter((id) => index.byId.has(id)) : [];
 
   return (
     <div className="app">
@@ -136,36 +116,59 @@ export default function App() {
       <TopBar
         query={query}
         onQuery={handleQuery}
-        view={view}
-        onView={changeView}
+        view={view.kind === 'mesh' ? 'mesh' : 'catalog'}
+        onView={changeTopView}
         serviceCount={index.services.length}
       />
 
       <main className="app__body">
-        {selected && detailMode === 'page' ? (
+        {view.kind === 'detail' && detailService ? (
           <ServiceDetailPage
-            key={selected.serviceId}
-            service={selected}
+            key={detailService.serviceId}
+            service={detailService}
             index={index}
-            onBack={closeDetail}
-            onOpenMap={openInMap}
-            onSelectNode={open}
+            onBack={goBack}
+            onOpenMap={reroot}
+            onSelectNode={openDetail}
           />
-        ) : selected && detailMode === 'map' ? (
-          <div className="detail" key={selected.serviceId}>
+        ) : view.kind === 'map' && mapRootIds.length > 0 ? (
+          <div className="detail" key={mapRootIds.join(',')}>
             <div className="detail__bar">
-              <button className="backbtn" onClick={closeDetail}>
+              <button className="backbtn" onClick={goBack}>
                 <ArrowRight width={14} height={14} className="backbtn__ico" />
-                <span>{view === 'mesh' ? 'Mesh' : 'Catalog'}</span>
+                <span>{lastTopView === 'mesh' ? 'Mesh' : 'Catalog'}</span>
               </button>
-              <span className="detail__crumb mono">/ {selected.serviceId}</span>
+              <span className="detail__crumb mono">
+                / {mapRootIds.length === 1 ? mapRootIds[0] : `${mapRootIds.length} roots`}
+              </span>
             </div>
             <div className="detail__split">
-              <ServiceDetail index={index} service={selected} onSelectNode={openInMap} onOpenDetail={open} />
-              <DependencyMap index={index} rootId={selected.serviceId} onSelectNode={openInMap} />
+              {mapRootIds.length === 1 ? (
+                <ServiceDetail
+                  index={index}
+                  service={index.byId.get(mapRootIds[0])!}
+                  onSelectNode={reroot}
+                  onOpenDetail={openDetail}
+                />
+              ) : (
+                <RootsSidebar
+                  index={index}
+                  rootIds={mapRootIds}
+                  onRemove={removeRoot}
+                  onOpenDetail={openDetail}
+                />
+              )}
+              <DependencyMap
+                index={index}
+                rootIds={mapRootIds}
+                onReroot={reroot}
+                onToggleRoot={toggleRoot}
+              />
             </div>
           </div>
-        ) : view === 'catalog' ? (
+        ) : view.kind === 'mesh' ? (
+          <MeshView index={index} onSelectNode={reroot} />
+        ) : (
           <CatalogView
             index={index}
             facets={facets}
@@ -173,11 +176,9 @@ export default function App() {
             filters={filters}
             onToggle={toggle}
             onClear={clearFilters}
-            onOpen={open}
-            onMapView={openInMap}
+            onOpen={openDetail}
+            onMapView={reroot}
           />
-        ) : (
-          <MeshView index={index} onSelectNode={openInMap} />
         )}
       </main>
     </div>
