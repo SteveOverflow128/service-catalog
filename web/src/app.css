@@ -1762,3 +1762,115 @@ code.mono {
     display: none;
   }
 }
+
+/* ---- Catalog multi-select ------------------------------------------------ */
+.selbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 9px 14px;
+  background: #13243f;
+  border: 1px solid rgba(27, 116, 203, 0.35);
+  border-left: 3px solid var(--blue-500);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  color: var(--text-mid);
+}
+.selbar__count { color: var(--text-hi); }
+.selbar__cta {
+  padding: 6px 12px;
+  border: 1px solid var(--blue-500);
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--blue-500), var(--accent-deep));
+  color: #fff;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.selbar__cta:disabled { opacity: 0.4; cursor: not-allowed; }
+.selbar__clear {
+  padding: 6px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--text-lo);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.selbar__clear:hover { color: var(--text-mid); }
+.selbar__hint { margin-left: auto; color: var(--text-lo); font-size: 11px; }
+
+/* Card checkbox (top-left) shown only in select mode. */
+.svc-card--select { cursor: pointer; }
+.svc-card--selected { border-color: var(--blue-500); box-shadow: 0 0 0 1px rgba(27, 116, 203, 0.45); }
+.svc-card__check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid #4a5570;
+  background: #0c0f17;
+}
+.svc-card__check--on { background: var(--blue-500); border-color: var(--blue-500); }
+.svc-card__check--on::after {
+  content: "✓";
+  position: absolute;
+  top: -3px;
+  left: 2px;
+  color: #fff;
+  font-size: 12px;
+}
+.svc-card__id--link { cursor: pointer; }
+.svc-card__id--link:hover { color: var(--text-hi); text-decoration: underline; }
+
+/* ---- Roots sidebar (multi-root map left panel) --------------------------- */
+.rootsbar {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface-1);
+  padding: 14px;
+}
+.rootsbar__head { margin-bottom: 12px; }
+.rootsbar__list { display: flex; flex-direction: column; gap: 8px; }
+.rootrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.rootrow__open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 9px 10px;
+  background: none;
+  border: none;
+  color: var(--text-mid);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+.rootrow__open:hover { color: var(--text-hi); }
+.rootrow__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.rootrow__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rootrow__id { margin-left: auto; font-size: 10px; color: var(--text-lo); flex-shrink: 0; }
+.rootrow__rm {
+  display: flex;
+  align-items: center;
+  padding: 0 9px;
+  align-self: stretch;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--hairline);
+  color: var(--text-lo);
+  cursor: pointer;
+}
+.rootrow__rm:hover { color: var(--error, #e72c2f); }
