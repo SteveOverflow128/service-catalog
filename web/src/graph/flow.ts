@@ -90,7 +90,7 @@ function labelFor(index: CatalogIndex, id: string): string {
 
 /** Build FlowNodes + FlowLinks, introducing ghost re-entry nodes for any
  *  edge that doesn't go strictly left→right (target column ≤ source column). */
-function classify(index: CatalogIndex, col: Map<string, number>, branch: Map<string, string>, _rootId: string) {
+function classify(index: CatalogIndex, col: Map<string, number>, branch: Map<string, string>) {
   const nodes = new Map<string, FlowNode>();
   const ensureReal = (id: string) => {
     if (!nodes.has(id)) {
@@ -293,7 +293,7 @@ function layout(columns: FlowColumn[], links: FlowLink[], width: number, height:
 
 export function buildFlowLayout(index: CatalogIndex, rootId: string, opts: FlowOpts): FlowLayout {
   const { col, branch } = assignColumns(index, rootId, opts.mode, opts.depth);
-  const { nodes: allNodes, links: allLinks } = classify(index, col, branch, rootId);
+  const { nodes: allNodes, links: allLinks } = classify(index, col, branch);
   computeWeights(allNodes, allLinks);
   const { nodes, links, truncated } = applyCaps(allNodes, allLinks, opts.nodeCap ?? DEFAULT_CAP);
   const columns = groupByColumn(nodes);

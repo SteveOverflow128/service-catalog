@@ -31,11 +31,24 @@ describe('buildFlowLayout — layering', () => {
     expect(node(layout, 'c')).toBeUndefined();
   });
 
+  it('includes exactly two hops at depth 2', () => {
+    const layout = buildFlowLayout(makeIndex(), 'a', { mode: 'dependencies', depth: 2, ...OPTS });
+    expect(node(layout, 'b')).toBeTruthy();      // hop 1
+    expect(node(layout, 'c')).toBeTruthy();      // hop 2
+    expect(node(layout, 'ext-x')).toBeUndefined(); // hop 3, excluded
+  });
+
   it('places the root at column 0 in both mode', () => {
     const layout = buildFlowLayout(makeIndex(), 'b', { mode: 'both', depth: 1, ...OPTS });
     expect(node(layout, 'b')!.column).toBe(0);
     expect(node(layout, 'a')!.column).toBe(-1); // a depends on b -> upstream
     expect(node(layout, 'c')!.column).toBe(1);  // b depends on c -> downstream
+  });
+
+  it('emits links on both sides of the focus in both mode', () => {
+    const layout = buildFlowLayout(makeIndex(), 'b', { mode: 'both', depth: 1, ...OPTS });
+    expect(layout.links.find((l) => l.source === 'a' && l.target === 'b')).toBeTruthy(); // upstream into focus
+    expect(layout.links.find((l) => l.source === 'b' && l.target === 'c')).toBeTruthy(); // downstream from focus
   });
 });
 
@@ -139,5 +152,13 @@ describe('buildFlowLayout — caps', () => {
     expect(layout.truncated).toBeGreaterThan(0);
     // root is never dropped
     expect(layout.nodes.some((n) => n.id === 'a')).toBe(true);
+  });
+
+  it('keeps the heaviest node when a column is capped to 1', () => {
+    const layout = buildFlowLayout(makeCyclicIndex(), 'a', { mode: 'dependencies', depth: 1, ...OPTS, nodeCap: 1 });
+    const col1 = layout.columns.find((c) => c.column === 1)!;
+    expect(col1.nodes.length).toBe(1);
+    expect(col1.nodes[0].id).toBe('b'); // b (weight 3) kept over c (weight 1)
+    expect(layout.truncated).toBeGreaterThanOrEqual(1);
   });
 });
