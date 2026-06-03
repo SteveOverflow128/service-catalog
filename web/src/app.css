@@ -1838,6 +1838,145 @@ code.mono {
 .svc-card__id--link { cursor: pointer; }
 .svc-card__id--link:hover { color: var(--text-hi); text-decoration: underline; }
 
+/* ---- Flow view --------------------------------------------------------- */
+.flow {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.flow__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px 8px;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+.flow__title {
+  margin: 2px 0 0;
+  font-size: 22px;
+}
+.flow__stats {
+  color: var(--text-lo);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.flow__exports {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+.flow__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px 10px;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+  background: var(--surface-1);
+}
+
+/* Canvas area: scrolls vertically if Sankey is tall; leave room for legend. */
+.flow__canvaswrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 12px 56px;
+}
+.flow__empty {
+  color: var(--text-lo);
+  font-size: 13px;
+  padding: 40px;
+  text-align: center;
+  margin: 0;
+}
+
+/* Floating legend pinned to bottom-left of the canvas wrap. */
+.flow__legend {
+  position: sticky;
+  bottom: 8px;
+  left: 8px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(8, 16, 34, 0.78);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+  margin-top: 8px;
+}
+.flow__legenditem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-mid);
+}
+.flow__swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: var(--r-sm);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ---- Sankey SVG canvas ------------------------------------------------- */
+
+/* SVG fills its container width; height is driven by viewBox. */
+.sankey {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible; /* labels outside viewBox still render */
+}
+
+/* Default node: mid-slate rectangle matching the observatory palette. */
+.sankey__node {
+  fill: var(--slate-600);
+  transition: fill 120ms ease;
+}
+.sankey__node:hover {
+  fill: var(--accent);
+}
+
+/* Ghost (cycle re-entry) node: faded, dashed stroke — signals "loop". */
+.sankey__node--ghost {
+  fill: var(--blue-300);
+  fill-opacity: 0.14;
+  stroke: var(--blue-300);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+.sankey__node--ghost:hover {
+  fill-opacity: 0.28;
+}
+
+/* External dependency node: darker/de-emphasised; cursor stays default (non-clickable). */
+.sankey__node--ext {
+  fill: var(--slate-500);
+  stroke: var(--hairline-strong);
+  stroke-width: 0.5;
+}
+.sankey__node--ext:hover {
+  fill: var(--slate-500); /* no pointer interaction — override base hover */
+}
+
+/* Node label: tiny mono text; pointer-events off so hover on the rect still fires. */
+.sankey__label {
+  fill: var(--text-mid);
+  font-size: 9.5px;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* ---- Roots sidebar (multi-root map left panel) --------------------------- */
 .rootsbar {
   width: 280px;
