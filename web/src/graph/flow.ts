@@ -150,9 +150,37 @@ function groupByColumn(nodes: FlowNode[]): FlowColumn[] {
   return [...by.entries()].sort((a, b) => a[0] - b[0]).map(([column, ns]) => ({ column, nodes: ns }));
 }
 
-/** STUB — filled in Task 4. */
-function computeWeights(_nodes: FlowNode[], links: FlowLink[]): void {
-  for (const l of links) l.weight = 1;
+/** Flow weight = blast radius of the endpoint FARTHER from the root: the count
+ *  of distinct services reachable continuing away from the root. Leaves/ghosts
+ *  weigh 1. Computed on the post-ghost DAG (|column| strictly increases along
+ *  the away direction → acyclic), memoized. */
+function computeWeights(nodes: FlowNode[], links: FlowLink[]): void {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  // awayAdj[n] = farther neighbors reached by stepping away from the root.
+  const awayAdj = new Map<string, string[]>();
+  for (const n of nodes) awayAdj.set(n.id, []);
+  for (const l of links) {
+    const s = byId.get(l.source)!, t = byId.get(l.target)!;
+    const nearer = Math.abs(s.column) < Math.abs(t.column) ? s : t;
+    const farther = nearer === s ? t : s;
+    if (Math.abs(farther.column) > Math.abs(nearer.column)) {
+      awayAdj.get(nearer.id)!.push(farther.id);
+    }
+  }
+  const memo = new Map<string, Set<string>>();
+  const reach = (id: string): Set<string> => {
+    const cached = memo.get(id);
+    if (cached) return cached;
+    const acc = new Set<string>([byId.get(id)!.realId]);
+    memo.set(id, acc); // set before recursing; DAG guarantees no self-cycle
+    for (const m of awayAdj.get(id)!) for (const r of reach(m)) acc.add(r);
+    return acc;
+  };
+  for (const l of links) {
+    const s = byId.get(l.source)!, t = byId.get(l.target)!;
+    const farther = Math.abs(t.column) >= Math.abs(s.column) ? t : s;
+    l.weight = Math.max(1, reach(farther.id).size);
+  }
 }
 
 /** STUB — filled in Task 6. */

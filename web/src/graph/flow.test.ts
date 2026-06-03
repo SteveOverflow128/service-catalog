@@ -67,3 +67,31 @@ describe('buildFlowLayout — ghosting', () => {
     expect(layout.links.find((l) => l.source === 'b' && l.target === 'c')!.branch).toBe('b');
   });
 });
+
+function link(layout: ReturnType<typeof buildFlowLayout>, s: string, t: string) {
+  return layout.links.find((l) => l.source === s && l.target === t)!;
+}
+
+describe('buildFlowLayout — flow weights', () => {
+  it('weighs a leaf edge 1 and a trunk by its subtree size', () => {
+    const layout = buildFlowLayout(makeIndex(), 'a', { mode: 'dependencies', depth: 0, width: 800, height: 400 });
+    expect(link(layout, 'c', 'ext-x').weight).toBe(1);      // leaf
+    expect(link(layout, 'b', 'c').weight).toBe(2);          // c, ext-x
+    expect(link(layout, 'a', 'b').weight).toBe(3);          // b, c, ext-x
+  });
+
+  it('is non-increasing along a path away from the root', () => {
+    const layout = buildFlowLayout(makeIndex(), 'a', { mode: 'dependencies', depth: 0, width: 800, height: 400 });
+    const ab = link(layout, 'a', 'b').weight;
+    const bc = link(layout, 'b', 'c').weight;
+    const cx = link(layout, 'c', 'ext-x').weight;
+    expect(ab).toBeGreaterThanOrEqual(bc);
+    expect(bc).toBeGreaterThanOrEqual(cx);
+  });
+
+  it('weighs a back-edge (ghost) link 1', () => {
+    const layout = buildFlowLayout(makeCyclicIndex(), 'a', { mode: 'dependencies', depth: 0, width: 800, height: 400 });
+    const back = layout.links.find((l) => l.isBackEdge)!;
+    expect(back.weight).toBe(1);
+  });
+});
