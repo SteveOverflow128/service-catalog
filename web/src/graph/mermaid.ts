@@ -1,5 +1,6 @@
 import type { CatalogIndex } from '../data/catalog';
 import type { Edge } from '../types';
+import type { FlowLayout } from './flow';
 
 // Renders a node set + edge list into Mermaid `flowchart` source. Pure (no DOM,
 // no React) so it can be unit-tested in isolation. Edge style encodes the
@@ -90,4 +91,19 @@ export function toMermaid(
   }
 
   return lines.join('\n');
+}
+
+/** Mermaid `sankey-beta` rows from a FlowLayout. Mermaid sankey is CSV-bodied:
+ *  one `source,target,value` line per link. Ghost targets get a "(loop)" label
+ *  so the re-entry reads clearly. Labels are sanitized (commas/quotes stripped).
+ *  Uses realId as the row identifier so external node ids are preserved verbatim. */
+export function toMermaidSankey(layout: FlowLayout): string {
+  const labelOf = new Map(layout.nodes.map((n) => [n.id, n.isGhost ? `${n.realId} (loop)` : n.realId]));
+  const clean = (s: string) => s.replace(/[",]/g, ' ').trim();
+  const rows = layout.links.map((l) => {
+    const src = clean(labelOf.get(l.source) ?? l.source);
+    const tgt = clean(labelOf.get(l.target) ?? l.target);
+    return `${src},${tgt},${l.weight}`;
+  });
+  return ['sankey-beta', '', ...rows].join('\n');
 }
