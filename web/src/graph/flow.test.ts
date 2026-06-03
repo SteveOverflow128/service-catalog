@@ -95,3 +95,32 @@ describe('buildFlowLayout — flow weights', () => {
     expect(back.weight).toBe(1);
   });
 });
+
+describe('buildFlowLayout — geometry', () => {
+  const layout = buildFlowLayout(makeIndex(), 'a', { mode: 'dependencies', depth: 0, width: 800, height: 400 });
+
+  it('keeps every node rect within the viewport', () => {
+    for (const n of layout.nodes) {
+      expect(n.y0).toBeGreaterThanOrEqual(0);
+      expect(n.y1).toBeLessThanOrEqual(400);
+      expect(n.y1).toBeGreaterThan(n.y0);
+      expect(n.x).toBeGreaterThanOrEqual(0);
+      expect(n.x).toBeLessThanOrEqual(800);
+    }
+  });
+
+  it('orders columns left→right by ascending column index with increasing x', () => {
+    const cols = layout.columns;
+    for (let i = 1; i < cols.length; i++) {
+      expect(cols[i].column).toBeGreaterThan(cols[i - 1].column);
+      expect(cols[i].nodes[0].x).toBeGreaterThanOrEqual(cols[i - 1].nodes[0].x);
+    }
+  });
+
+  it('sizes a band consistently on both ends (∝ weight)', () => {
+    const ab = link(layout, 'a', 'b');
+    expect(Math.round(ab.sy1 - ab.sy0)).toBe(Math.round(ab.ty1 - ab.ty0));
+    const cx = link(layout, 'c', 'ext-x');
+    expect(ab.sy1 - ab.sy0).toBeGreaterThan(cx.sy1 - cx.sy0); // heavier band is thicker
+  });
+});

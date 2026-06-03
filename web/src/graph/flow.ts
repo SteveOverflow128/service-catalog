@@ -188,9 +188,84 @@ function applyCaps(nodes: FlowNode[], links: FlowLink[], _cap: number): { nodes:
   return { nodes, links, truncated: 0 };
 }
 
-/** STUB — filled in Task 5. */
-function layout(_columns: FlowColumn[], _links: FlowLink[], _width: number, _height: number): void {
-  void GAP; void PAD; /* geometry filled in Task 5 */
+/** Sankey packing: x by column, y by stacked value (max of in/out weight),
+ *  band endpoints by a per-node running offset. Mutates node/link geometry. */
+function layout(columns: FlowColumn[], links: FlowLink[], width: number, height: number): void {
+  const byId = new Map<string, FlowNode>();
+  for (const c of columns) for (const n of c.nodes) byId.set(n.id, n);
+
+  // node value = max(sum incoming weight, sum outgoing weight, 1)
+  const inSum = new Map<string, number>();
+  const outSum = new Map<string, number>();
+  for (const l of links) {
+    inSum.set(l.target, (inSum.get(l.target) ?? 0) + l.weight);
+    outSum.set(l.source, (outSum.get(l.source) ?? 0) + l.weight);
+  }
+  const value = (n: FlowNode) => Math.max(inSum.get(n.id) ?? 0, outSum.get(n.id) ?? 0, 1);
+
+  // single figure-wide value→px scale
+  const colTotals = columns.map((c) => c.nodes.reduce((a, n) => a + value(n), 0));
+  const maxTotal = Math.max(1, ...colTotals);
+  const maxNodes = Math.max(1, ...columns.map((c) => c.nodes.length));
+  const usable = Math.max(1, height - 2 * PAD - GAP * (maxNodes - 1));
+  const scale = usable / maxTotal;
+
+  // x per column: evenly spread between left/right label margins
+  const xLeft = 64;
+  const xRight = Math.max(xLeft + NODE_W, width - 80);
+  const span = columns.length > 1 ? (xRight - xLeft) / (columns.length - 1) : 0;
+  columns.forEach((c, i) => {
+    const x = columns.length > 1 ? xLeft + i * span : (width - NODE_W) / 2;
+    c.nodes.forEach((n) => (n.x = x));
+  });
+
+  // barycenter ordering of each column by the mean y of already-placed neighbors
+  // in the column nearer the root; root column (index of column 0) seeds first.
+  const rootColIdx = columns.findIndex((c) => c.column === 0);
+  const place = (c: FlowColumn) => {
+    const total = c.nodes.reduce((a, n) => a + value(n), 0);
+    const colH = total * scale + GAP * (c.nodes.length - 1);
+    let y = (height - colH) / 2;
+    for (const n of c.nodes) {
+      const h = value(n) * scale;
+      n.y0 = y; n.y1 = y + h; y += h + GAP;
+    }
+  };
+  // place root column, then fan outward both directions
+  place(columns[rootColIdx]);
+  const order = [...Array(columns.length).keys()].sort(
+    (a, b) => Math.abs(columns[a].column) - Math.abs(columns[b].column),
+  );
+  for (const i of order) {
+    if (i === rootColIdx) continue;
+    const c = columns[i];
+    const nearerCol = columns.find((cc) => cc.column === c.column + (c.column > 0 ? -1 : 1));
+    if (nearerCol) {
+      const yOf = (id: string) => { const n = byId.get(id); return n ? (n.y0 + n.y1) / 2 : 0; };
+      const bary = (n: FlowNode) => {
+        const ys = links
+          .filter((l) => l.source === n.id || l.target === n.id)
+          .map((l) => (l.source === n.id ? l.target : l.source))
+          .filter((id) => nearerCol.nodes.some((nn) => nn.id === id))
+          .map(yOf);
+        return ys.length ? ys.reduce((a, v) => a + v, 0) / ys.length : Number.MAX_SAFE_INTEGER;
+      };
+      c.nodes.sort((a, b) => bary(a) - bary(b));
+    }
+    place(c);
+  }
+
+  // band endpoints: running offset per node on each side
+  const oOff = new Map<string, number>();
+  const iOff = new Map<string, number>();
+  for (const n of byId.values()) { oOff.set(n.id, n.y0); iOff.set(n.id, n.y0); }
+  // draw heavier bands first for a tidier stack
+  for (const l of [...links].sort((a, b) => b.weight - a.weight)) {
+    const s = byId.get(l.source)!, t = byId.get(l.target)!;
+    const h = l.weight * scale;
+    l.sy0 = oOff.get(s.id)!; l.sy1 = l.sy0 + h; oOff.set(s.id, l.sy1);
+    l.ty0 = iOff.get(t.id)!; l.ty1 = l.ty0 + h; iOff.set(t.id, l.ty1);
+  }
 }
 
 export function buildFlowLayout(index: CatalogIndex, rootId: string, opts: FlowOpts): FlowLayout {
