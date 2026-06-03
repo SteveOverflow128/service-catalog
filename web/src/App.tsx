@@ -50,6 +50,9 @@ export default function App() {
   const clearFilters = useCallback(() => setFilters(emptyFilters()), []);
 
   const openDetail = useCallback((id: string) => setView({ kind: 'detail', id }), []);
+  const openMap = useCallback((ids: string[]) => {
+    if (ids.length) setView({ kind: 'map', rootIds: ids });
+  }, []);
   const reroot = useCallback((id: string) => setView({ kind: 'map', rootIds: [id] }), []);
   const toggleRoot = useCallback((id: string) => {
     setView((v) => {
@@ -178,6 +181,7 @@ export default function App() {
             onClear={clearFilters}
             onOpen={openDetail}
             onMapView={reroot}
+            onMapSelected={openMap}
           />
         )}
       </main>

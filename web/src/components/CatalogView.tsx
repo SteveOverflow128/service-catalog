@@ -30,6 +30,7 @@ export function CatalogView({
   onClear,
   onOpen,
   onMapView,
+  onMapSelected,
 }: {
   index: CatalogIndex;
   facets: Facets;
@@ -39,9 +40,26 @@ export function CatalogView({
   onClear: () => void;
   onOpen: (id: string) => void;
   onMapView: (id: string) => void;
+  onMapSelected: (ids: string[]) => void;
 }) {
   const [sort, setSort] = useState<Sort>('criticality');
   const [exportingCsv, setExportingCsv] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleSelectMode = () =>
+    setSelectMode((on) => {
+      if (on) setSelected(new Set()); // turning off clears the selection
+      return !on;
+    });
 
   const results = useMemo(() => {
     const filtered = index.services.filter((s) => matchesFilters(s, filters) && matchesQuery(s, query));
@@ -86,11 +104,35 @@ export function CatalogView({
               </button>
             ))}
           </div>
+          <button
+            className={`sortbtn${selectMode ? ' sortbtn--on' : ''}`}
+            onClick={toggleSelectMode}
+            aria-pressed={selectMode}
+          >
+            {selectMode ? '☑ ' : ''}Select multiple
+          </button>
           <button className="exportbtn" onClick={() => setExportingCsv(true)} title="Export current results as CSV">
             <TableIcon width={15} height={15} />
             <span>Export CSV</span>
           </button>
         </div>
+
+        {selectMode && (
+          <div className="selbar">
+            <span className="selbar__count mono">{selected.size} selected</span>
+            <button
+              className="selbar__cta"
+              disabled={selected.size === 0}
+              onClick={() => onMapSelected([...selected])}
+            >
+              Map selected →
+            </button>
+            <button className="selbar__clear" onClick={() => setSelected(new Set())}>
+              Clear
+            </button>
+            <span className="selbar__hint mono">checks persist across filters</span>
+          </div>
+        )}
 
         {results.length === 0 ? (
           <div className="empty-state">
@@ -109,6 +151,9 @@ export function CatalogView({
                 index={index}
                 onOpen={onOpen}
                 onMapView={onMapView}
+                selectMode={selectMode}
+                selected={selected.has(s.serviceId)}
+                onToggleSelect={toggleSelect}
                 style={{ animationDelay: `${Math.min(i * 24, 480)}ms` }}
               />
             ))}
