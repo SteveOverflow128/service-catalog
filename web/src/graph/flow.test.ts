@@ -124,3 +124,15 @@ describe('buildFlowLayout — geometry', () => {
     expect(ab.sy1 - ab.sy0).toBeGreaterThan(cx.sy1 - cx.sy0); // heavier band is thicker
   });
 });
+
+describe('buildFlowLayout — caps', () => {
+  it('caps a column and reports the dropped count', () => {
+    const layout = buildFlowLayout(makeIndex(), 'a', {
+      mode: 'dependencies', depth: 1, width: 800, height: 400, nodeCap: 0,
+    });
+    // nodeCap 0 forces every non-root column to be fully truncated
+    expect(layout.truncated).toBeGreaterThan(0);
+    // root is never dropped
+    expect(layout.nodes.some((n) => n.id === 'a')).toBe(true);
+  });
+});

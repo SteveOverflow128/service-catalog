@@ -183,9 +183,32 @@ function computeWeights(nodes: FlowNode[], links: FlowLink[]): void {
   }
 }
 
-/** STUB — filled in Task 6. */
-function applyCaps(nodes: FlowNode[], links: FlowLink[], _cap: number): { nodes: FlowNode[]; links: FlowLink[]; truncated: number } {
-  return { nodes, links, truncated: 0 };
+/** Bound runaway columns: keep the heaviest nodes per column, drop the rest,
+ *  prune dangling links, and report how many nodes were hidden. The root
+ *  (column 0) is never dropped. */
+function applyCaps(nodes: FlowNode[], links: FlowLink[], cap: number): { nodes: FlowNode[]; links: FlowLink[]; truncated: number } {
+  const weightOf = new Map<string, number>();
+  for (const l of links) {
+    weightOf.set(l.source, Math.max(weightOf.get(l.source) ?? 0, l.weight));
+    weightOf.set(l.target, Math.max(weightOf.get(l.target) ?? 0, l.weight));
+  }
+  const byCol = new Map<number, FlowNode[]>();
+  for (const n of nodes) {
+    const arr = byCol.get(n.column);
+    if (arr) arr.push(n);
+    else byCol.set(n.column, [n]);
+  }
+  const keep = new Set<string>();
+  let truncated = 0;
+  for (const [column, ns] of byCol) {
+    if (column === 0) { ns.forEach((n) => keep.add(n.id)); continue; }
+    const sorted = [...ns].sort((a, b) => (weightOf.get(b.id) ?? 0) - (weightOf.get(a.id) ?? 0));
+    sorted.slice(0, cap).forEach((n) => keep.add(n.id));
+    truncated += Math.max(0, sorted.length - cap);
+  }
+  const keptNodes = nodes.filter((n) => keep.has(n.id));
+  const keptLinks = links.filter((l) => keep.has(l.source) && keep.has(l.target));
+  return { nodes: keptNodes, links: keptLinks, truncated };
 }
 
 /** Sankey packing: x by column, y by stacked value (max of in/out weight),
