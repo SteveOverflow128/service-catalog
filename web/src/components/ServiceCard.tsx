@@ -16,27 +16,44 @@ export function ServiceCard({
   onOpen,
   onMapView,
   style,
+  selectMode = false,
+  selected = false,
+  onToggleSelect,
 }: {
   service: Service;
   index: CatalogIndex;
   onOpen: (id: string) => void;
   onMapView: (id: string) => void;
   style?: React.CSSProperties;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }) {
   const depCount = service.dependencies?.length ?? 0;
   const dependantCount = index.dependantCount(service.serviceId);
   const tier = tierStyle(service.criticalityTier);
 
+  // In select mode the whole card toggles selection; otherwise it opens detail.
+  const primary = () => (selectMode ? onToggleSelect?.(service.serviceId) : onOpen(service.serviceId));
+
   return (
     <div
-      className="svc-card"
+      className={`svc-card${selectMode ? ' svc-card--select' : ''}${selected ? ' svc-card--selected' : ''}`}
       style={{ ...style, ['--tier' as string]: tier.color, ['--glow' as string]: tier.glow }}
       role="button"
       tabIndex={0}
-      onClick={() => onOpen(service.serviceId)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(service.serviceId); }}
+      onClick={primary}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') primary(); }}
     >
       <span className="svc-card__edge" />
+      {selectMode && (
+        <span
+          className={`svc-card__check${selected ? ' svc-card__check--on' : ''}`}
+          role="checkbox"
+          aria-checked={selected}
+          aria-label={`Select ${service.name}`}
+        />
+      )}
       <div className="svc-card__top">
         <TierBadge tier={service.criticalityTier} size="sm" />
         <LifecycleBadge lifecycle={service.lifecycle} />
@@ -44,7 +61,13 @@ export function ServiceCard({
       </div>
 
       <h3 className="svc-card__name">{service.name}</h3>
-      <code className="svc-card__id mono">{service.serviceId}</code>
+      <code
+        className={`svc-card__id mono${selectMode ? ' svc-card__id--link' : ''}`}
+        onClick={selectMode ? (e) => { e.stopPropagation(); onOpen(service.serviceId); } : undefined}
+        title={selectMode ? 'Open detail page' : undefined}
+      >
+        {service.serviceId}
+      </code>
 
       {service.description && <p className="svc-card__desc">{service.description}</p>}
 
@@ -63,14 +86,16 @@ export function ServiceCard({
         <span className="depstat depstat--in">
           <b className="mono">{dependantCount}</b> dependants
         </span>
-        <button
-          className="svc-card__open"
-          onClick={(e) => { e.stopPropagation(); onMapView(service.serviceId); }}
-          tabIndex={0}
-          aria-label={`View ${service.name} in mesh`}
-        >
-          map <ArrowRight width={13} height={13} />
-        </button>
+        {!selectMode && (
+          <button
+            className="svc-card__open"
+            onClick={(e) => { e.stopPropagation(); onMapView(service.serviceId); }}
+            tabIndex={0}
+            aria-label={`View ${service.name} in mesh`}
+          >
+            map <ArrowRight width={13} height={13} />
+          </button>
+        )}
       </div>
     </div>
   );
