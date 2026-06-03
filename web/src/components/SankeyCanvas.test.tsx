@@ -22,4 +22,11 @@ describe('SankeyCanvas', () => {
     await userEvent.click(screen.getByTestId('flow-node-b'));
     expect(onReroot).toHaveBeenCalledWith('b');
   });
+
+  it('does not reroot when an external node is clicked', async () => {
+    const onReroot = vi.fn();
+    render(<SankeyCanvas layout={layout()} colorScheme="criticality" onReroot={onReroot} />);
+    await userEvent.click(screen.getByTestId('flow-node-ext-x'));
+    expect(onReroot).not.toHaveBeenCalled();
+  });
 });

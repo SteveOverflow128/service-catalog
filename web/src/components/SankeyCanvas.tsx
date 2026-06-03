@@ -41,6 +41,9 @@ export function SankeyCanvas({ layout, colorScheme, onReroot, width = 800, heigh
 
   const click = (n: FlowNode) => { if (!n.isExternal) onReroot(n.realId); };
 
+  const maxCol = Math.max(...layout.columns.map((c) => c.column));
+  const minCol = Math.min(...layout.columns.map((c) => c.column));
+
   return (
     <svg className="sankey" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Dependency flow">
       <g className="sankey__links">
@@ -48,7 +51,7 @@ export function SankeyCanvas({ layout, colorScheme, onReroot, width = 800, heigh
           const lit = !connected || connected.has(l.source) || connected.has(l.target);
           return (
             <path
-              key={i}
+              key={`${l.source}-${l.target}-${i}`}
               d={bandPath(l, xOf)}
               fill={linkColor(l, colorScheme)}
               opacity={lit ? (l.isBackEdge ? 0.32 : 0.5) : 0.08}
@@ -61,13 +64,13 @@ export function SankeyCanvas({ layout, colorScheme, onReroot, width = 800, heigh
       </g>
       <g className="sankey__nodes">
         {layout.nodes.map((n) => {
-          const isLast = n.column === Math.max(...layout.columns.map((c) => c.column));
-          const isFirst = n.column === Math.min(...layout.columns.map((c) => c.column));
+          const isLast = n.column === maxCol;
+          const isFirst = n.column === minCol;
           const mid = (n.y0 + n.y1) / 2;
           return (
             <g key={n.id} opacity={dim(n.id)}>
               <rect
-                data-testid={`flow-node-${n.realId}`}
+                data-testid={`flow-node-${n.id}`}
                 x={n.x} y={n.y0} width={NODE_W} height={Math.max(2, n.y1 - n.y0)} rx={2}
                 className={`sankey__node${n.isGhost ? ' sankey__node--ghost' : ''}${n.isExternal ? ' sankey__node--ext' : ''}`}
                 onMouseEnter={() => setHover(n.id)}

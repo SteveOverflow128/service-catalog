@@ -28,12 +28,11 @@ const SCHEMES: { key: ColorScheme; label: string }[] = [
 ];
 
 export function FlowView({
-  index, rootId, onReroot, onOpenDetail,
+  index, rootId, onReroot,
 }: {
   index: CatalogIndex;
   rootId: string;
   onReroot: (id: string) => void;
-  onOpenDetail?: (id: string) => void;
 }) {
   const [mode, setMode] = useState<MapMode>('dependencies');
   const [depth, setDepth] = useState<Depth>(2);
@@ -48,9 +47,6 @@ export function FlowView({
 
   const downstreamEmpty = mode === 'dependencies' && layout.links.length === 0;
   const slug = (focus?.name ?? rootId).toLowerCase().replace(/[^a-z0-9]+/g, '-');
-
-  // onOpenDetail accepted for parity; no behavior required for tests
-  void onOpenDetail;
 
   return (
     <div className="flow">
