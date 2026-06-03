@@ -7,7 +7,7 @@ import { FitIcon, MinusIcon, PlusIcon } from './icons';
 interface Props {
   elements: ElementDefinition[];
   layout: () => LayoutOptions;
-  onNodeClick?: (id: string) => void;
+  onNodeClick?: (id: string, ev: MouseEvent) => void;
   onNodeHover?: (id: string | null) => void;
   /** bump to force a re-layout/re-fit without changing elements */
   layoutKey?: string;
@@ -51,7 +51,7 @@ export function GraphCanvas({ elements, layout, onNodeClick, onNodeHover, layout
       hoverRef.current?.(null);
       if (boxRef.current) boxRef.current.style.cursor = 'grab';
     });
-    cy.on('tap', 'node', (evt) => clickRef.current?.(evt.target.id()));
+    cy.on('tap', 'node', (evt) => clickRef.current?.(evt.target.id(), evt.originalEvent as MouseEvent));
 
     return () => {
       cy.destroy();
