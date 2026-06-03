@@ -2,7 +2,7 @@ import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { tierStyle } from '../design/tokens';
 import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
-import { ArrowRight } from './icons';
+import { ArrowRight, FlowIcon } from './icons';
 
 /** Normalize to "YYYY-MM-DD", or "unknown" when absent/unparseable. */
 function fmtUpdated(date?: string): string {
@@ -15,6 +15,7 @@ export function ServiceCard({
   index,
   onOpen,
   onMapView,
+  onFlowView,
   style,
   selectMode = false,
   selected = false,
@@ -24,6 +25,7 @@ export function ServiceCard({
   index: CatalogIndex;
   onOpen: (id: string) => void;
   onMapView: (id: string) => void;
+  onFlowView: (id: string) => void;
   style?: React.CSSProperties;
   selectMode?: boolean;
   selected?: boolean;
@@ -87,14 +89,24 @@ export function ServiceCard({
           <b className="mono">{dependantCount}</b> dependants
         </span>
         {!selectMode && (
-          <button
-            className="svc-card__open"
-            onClick={(e) => { e.stopPropagation(); onMapView(service.serviceId); }}
-            tabIndex={0}
-            aria-label={`View ${service.name} in mesh`}
-          >
-            map <ArrowRight width={13} height={13} />
-          </button>
+          <>
+            <button
+              className="svc-card__open"
+              onClick={(e) => { e.stopPropagation(); onMapView(service.serviceId); }}
+              tabIndex={0}
+              aria-label={`View ${service.name} in mesh`}
+            >
+              map <ArrowRight width={13} height={13} />
+            </button>
+            <button
+              className="svc-card__open"
+              onClick={(e) => { e.stopPropagation(); onFlowView(service.serviceId); }}
+              tabIndex={0}
+              aria-label={`View ${service.name} flow`}
+            >
+              <FlowIcon width={13} height={13} />
+            </button>
+          </>
         )}
       </div>
     </div>

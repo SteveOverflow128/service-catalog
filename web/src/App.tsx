@@ -174,6 +174,7 @@ export default function App() {
                   service={index.byId.get(mapRootIds[0])!}
                   onSelectNode={reroot}
                   onOpenDetail={openDetail}
+                  onOpenFlow={openFlow}
                 />
               ) : (
                 <RootsSidebar
@@ -214,6 +215,7 @@ export default function App() {
             onClear={clearFilters}
             onOpen={openDetail}
             onMapView={reroot}
+            onFlowView={openFlow}
             onMapSelected={openMap}
           />
         )}

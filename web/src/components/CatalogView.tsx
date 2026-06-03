@@ -30,6 +30,7 @@ export function CatalogView({
   onClear,
   onOpen,
   onMapView,
+  onFlowView,
   onMapSelected,
 }: {
   index: CatalogIndex;
@@ -40,6 +41,7 @@ export function CatalogView({
   onClear: () => void;
   onOpen: (id: string) => void;
   onMapView: (id: string) => void;
+  onFlowView: (id: string) => void;
   onMapSelected: (ids: string[]) => void;
 }) {
   const [sort, setSort] = useState<Sort>('criticality');
@@ -155,6 +157,7 @@ export function CatalogView({
                 index={index}
                 onOpen={onOpen}
                 onMapView={onMapView}
+                onFlowView={onFlowView}
                 selectMode={selectMode}
                 selected={selected.has(s.serviceId)}
                 onToggleSelect={toggleSelect}

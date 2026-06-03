@@ -7,6 +7,7 @@ import {
   CloudIcon,
   DatabaseIcon,
   ExternalIcon,
+  FlowIcon,
   LayersIcon,
   ShieldIcon,
   WarnIcon,
@@ -93,11 +94,13 @@ export function ServiceDetail({
   service,
   onSelectNode,
   onOpenDetail,
+  onOpenFlow,
 }: {
   index: CatalogIndex;
   service: Service;
   onSelectNode: (id: string) => void;
   onOpenDetail?: (id: string) => void;
+  onOpenFlow?: (id: string) => void;
 }) {
   const deps = service.dependencies ?? [];
   const dependants = index.dependantsOf(service.serviceId);
@@ -140,6 +143,16 @@ export function ServiceDetail({
             <span className="countbox__l">dependants</span>
           </div>
         </div>
+
+        {onOpenFlow && (
+          <button
+            className="svc-card__open"
+            onClick={() => onOpenFlow(service.serviceId)}
+            aria-label={`View ${service.name} flow`}
+          >
+            <FlowIcon width={13} height={13} /> flow
+          </button>
+        )}
       </div>
 
       <Section label="Ownership">

@@ -18,6 +18,7 @@ function renderCatalog(onMapSelected = vi.fn()) {
       onClear={vi.fn()}
       onOpen={vi.fn()}
       onMapView={vi.fn()}
+      onFlowView={vi.fn()}
       onMapSelected={onMapSelected}
     />,
   );

@@ -17,6 +17,7 @@ describe('ServiceCard select mode', () => {
         index={index}
         onOpen={onOpen}
         onMapView={vi.fn()}
+        onFlowView={vi.fn()}
         selectMode
         selected={false}
         onToggleSelect={onToggleSelect}
@@ -29,7 +30,7 @@ describe('ServiceCard select mode', () => {
 
   it('clicking the card opens detail when selectMode is off', async () => {
     const onOpen = vi.fn();
-    render(<ServiceCard service={svc} index={index} onOpen={onOpen} onMapView={vi.fn()} />);
+    render(<ServiceCard service={svc} index={index} onOpen={onOpen} onMapView={vi.fn()} onFlowView={vi.fn()} />);
     await userEvent.click(screen.getByText('Alpha'));
     expect(onOpen).toHaveBeenCalledWith('a');
   });
@@ -41,6 +42,7 @@ describe('ServiceCard select mode', () => {
         index={index}
         onOpen={vi.fn()}
         onMapView={vi.fn()}
+        onFlowView={vi.fn()}
         selectMode
         selected
         onToggleSelect={vi.fn()}
