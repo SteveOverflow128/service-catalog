@@ -19,6 +19,9 @@ build/
 # Claude Code session config
 .claude/
 
+# Superpowers brainstorming companion (mockups/session state)
+.superpowers/
+
 # Processing data (folder tracked, contents ignored)
 data/*
 !data/.gitkeep
