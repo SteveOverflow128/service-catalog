@@ -1,6 +1,6 @@
-import { GraphIcon, ListIcon, SearchIcon } from './icons';
+import { FlowIcon, GraphIcon, ListIcon, SearchIcon } from './icons';
 
-export type View = 'catalog' | 'mesh';
+export type View = 'catalog' | 'mesh' | 'flow';
 
 export function TopBar({
   query,
@@ -68,6 +68,13 @@ export function TopBar({
         <button className={`viewtab ${view === 'mesh' ? 'viewtab--on' : ''}`} onClick={() => onView('mesh')}>
           <GraphIcon width={15} height={15} />
           Mesh
+        </button>
+        <button
+          className={`viewtab ${view === 'flow' ? 'viewtab--on' : ''}`}
+          onClick={() => onView('flow')}
+        >
+          <FlowIcon width={15} height={15} />
+          Flow
         </button>
         <span className="views__count mono" title="services catalogued">
           {serviceCount}
