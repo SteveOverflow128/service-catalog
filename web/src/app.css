@@ -956,6 +956,12 @@ code.mono {
   background: linear-gradient(180deg, var(--blue-500), var(--accent-deep));
   box-shadow: 0 2px 10px rgba(21, 82, 188, 0.45);
 }
+/* Direction control dims out when a slice stays in-group (services only),
+   where traversal direction has no effect. */
+.modeseg--off {
+  opacity: 0.4;
+  pointer-events: none;
+}
 .depthseg {
   display: flex;
   gap: 2px;
@@ -1168,6 +1174,15 @@ code.mono {
   border-bottom: 1px solid var(--hairline);
   background: var(--surface-1);
   flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* Direction + hop controls for an active slice, pushed to the trailing edge. */
+.mesh__neighborhood {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
   flex-wrap: wrap;
 }
 

@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
-import type { Service } from '../types';
+import type { MapMode, Service } from '../types';
 import type { CatalogIndex } from '../data/catalog';
-import { buildMeshElements, fcoseLayout } from '../graph/build';
+import { buildMeshElements, buildSubgraphElements, fcoseLayout } from '../graph/build';
 import { toMermaid } from '../graph/mermaid';
 import { GraphCanvas } from './GraphCanvas';
 import { Legend } from './Legend';
 import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
-import { CodeIcon, TableIcon } from './icons';
+import { BothIcon, CodeIcon, DownstreamIcon, TableIcon, UpstreamIcon } from './icons';
 
 type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'resource.type' | 'resource.provider' | 'resource.region' | 'criticalityTier' | 'team';
 
@@ -23,6 +23,26 @@ const DIM_LABELS: Record<GroupByDim, string> = {
   'resource.provider': 'Provider',
   'resource.region': 'Region',
 };
+
+// Neighborhood controls, mirroring the dependency map but seeded from the whole
+// slice rather than a single root: direction of traversal + how many hops out.
+const MODES: { key: MapMode; label: string; hint: string; Icon: typeof BothIcon }[] = [
+  { key: 'dependencies', label: 'Dependencies', hint: 'what the slice calls', Icon: DownstreamIcon },
+  { key: 'dependants', label: 'Dependants', hint: 'what calls into the slice', Icon: UpstreamIcon },
+  { key: 'both', label: 'Both', hint: 'full neighborhood', Icon: BothIcon },
+];
+
+// How far the neighborhood reaches out from the slice. 'in' stays inside the
+// group (services only — internal arrows, no external neighbors); the rest
+// expand outward by hop count ('all' = unbounded).
+type Reach = 'in' | 1 | 2 | 'all';
+
+const REACHES: { key: Reach; label: string }[] = [
+  { key: 'in', label: 'Services only' },
+  { key: 1, label: '1 hop' },
+  { key: 2, label: '2 hops' },
+  { key: 'all', label: 'All' },
+];
 
 function getDimValues(services: Service[], dim: GroupByDim): string[] {
   const vals = new Set<string>();
@@ -68,7 +88,10 @@ export function MeshView({
 }) {
   const [dim, setDim] = useState<GroupByDim | null>(null);
   const [dimValue, setDimValue] = useState<string | null>(null);
-  const [showDeps, setShowDeps] = useState(true);
+  // Neighborhood expansion from the slice — defaults reproduce the previous
+  // "with deps" view: the slice plus what it directly calls (1 hop forward).
+  const [mode, setMode] = useState<MapMode>('dependencies');
+  const [reach, setReach] = useState<Reach>(1);
   const [exporting, setExporting] = useState(false);
   const [exportingCsv, setExportingCsv] = useState(false);
 
@@ -99,46 +122,63 @@ export function MeshView({
     [filteredServices],
   );
 
-  const visibleEdges = useMemo(() => {
-    if (!isFiltered) return index.allEdges;
-    if (!showDeps) return [];
-    return index.allEdges.filter((e) => filteredServiceIds.has(e.from));
-  }, [index.allEdges, isFiltered, showDeps, filteredServiceIds]);
+  // Grow the visible graph outward from every service in the slice, honoring the
+  // direction (mode) + hop (depth) controls. Null when no slice is active, in
+  // which case the full mesh is shown.
+  const neighborhood = useMemo(() => {
+    if (!isFiltered) return null;
+    // "Services only": just the slice, with arrows between its members — nothing
+    // outside the group. Otherwise expand outward by direction + hop count.
+    if (reach === 'in') return index.induced(filteredServiceIds);
+    return index.egoSet(filteredServiceIds, mode, reach === 'all' ? 0 : reach);
+  }, [index, isFiltered, filteredServiceIds, mode, reach]);
+
+  const visibleEdges = neighborhood ? neighborhood.edges : index.allEdges;
+
+  // Catalog services within the visible neighborhood (externals have no record).
+  const visibleServices = useMemo(() => {
+    if (!neighborhood) return index.services;
+    return [...neighborhood.nodes]
+      .map((id) => index.byId.get(id))
+      .filter((s): s is NonNullable<typeof s> => !!s);
+  }, [neighborhood, index]);
 
   const elements = useMemo(
     () =>
-      buildMeshElements(
-        index,
-        isFiltered ? { serviceIds: filteredServiceIds, showDeps } : undefined,
-      ),
-    [index, isFiltered, filteredServiceIds, showDeps],
+      neighborhood
+        ? buildSubgraphElements(index, neighborhood.nodes, neighborhood.edges)
+        : buildMeshElements(index),
+    [index, neighborhood],
   );
 
-  const layoutKey = `${dim ?? 'all'}-${dimValue ?? 'all'}-${showDeps}`;
+  const layoutKey = `${dim ?? 'all'}-${dimValue ?? 'all'}-${mode}-${reach}`;
 
   const handleClick = (id: string) => {
     if (index.byId.has(id)) onSelectNode(id);
   };
 
   const getMermaidNodes = (): Set<string> => {
-    if (!isFiltered) {
-      const ids = new Set<string>();
-      for (const s of index.services) ids.add(s.serviceId);
-      for (const id of index.externals.keys()) ids.add(id);
-      return ids;
-    }
-    if (!showDeps) return new Set(filteredServiceIds);
-    const ids = new Set<string>(filteredServiceIds);
-    for (const e of visibleEdges) ids.add(e.to);
+    if (neighborhood) return neighborhood.nodes;
+    const ids = new Set<string>();
+    for (const s of index.services) ids.add(s.serviceId);
+    for (const id of index.externals.keys()) ids.add(id);
     return ids;
   };
 
+  // Direction is meaningless when staying in-group, so it drops out of the label.
+  const scopeLabel =
+    reach === 'in'
+      ? 'services only'
+      : `${mode} · ${reach === 'all' ? 'all hops' : `${reach} hop${reach === 1 ? '' : 's'}`}`;
+  const scopeSlug =
+    reach === 'in' ? 'services-only' : `${mode}-${reach === 'all' ? 'all' : reach + 'hop'}`;
+
   const mermaidTitle = isFiltered
-    ? `${dimValue} (${DIM_LABELS[dim!]})`
+    ? `${dimValue} (${DIM_LABELS[dim!]}) — ${scopeLabel}`
     : 'Full service mesh';
 
   const exportFilename = isFiltered
-    ? `mesh-${dim}-${(dimValue ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+    ? `mesh-${dim}-${(dimValue ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${scopeSlug}`
     : 'service-mesh';
 
   const statsLabel = isFiltered
@@ -197,19 +237,39 @@ export function MeshView({
         )}
 
         {isFiltered && (
-          <div className="modeseg" style={{ marginLeft: 'auto' }}>
-            <button
-              className={`segbtn${showDeps ? ' segbtn--on' : ''}`}
-              onClick={() => setShowDeps(true)}
+          <div className="mesh__neighborhood">
+            <div
+              className={`modeseg${reach === 'in' ? ' modeseg--off' : ''}`}
+              role="tablist"
+              aria-label="Neighborhood direction"
             >
-              With deps
-            </button>
-            <button
-              className={`segbtn${!showDeps ? ' segbtn--on' : ''}`}
-              onClick={() => setShowDeps(false)}
-            >
-              Services only
-            </button>
+              {MODES.map((m) => (
+                <button
+                  key={m.key}
+                  role="tab"
+                  aria-selected={mode === m.key}
+                  disabled={reach === 'in'}
+                  className={`segbtn ${mode === m.key ? 'segbtn--on' : ''}`}
+                  onClick={() => setMode(m.key)}
+                  title={reach === 'in' ? 'Direction applies once you reach beyond the group' : m.hint}
+                >
+                  <m.Icon width={15} height={15} />
+                  <span>{m.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="depthseg" role="group" aria-label="Neighborhood reach">
+              {REACHES.map((r) => (
+                <button
+                  key={r.label}
+                  className={`depthbtn ${reach === r.key ? 'depthbtn--on' : ''}`}
+                  onClick={() => setReach(r.key)}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -239,7 +299,7 @@ export function MeshView({
       {exportingCsv && (
         <CsvExport
           index={index}
-          services={filteredServices}
+          services={visibleServices}
           title={isFiltered ? `Export — ${dimValue} (${DIM_LABELS[dim!]})` : 'Export mesh as CSV'}
           filename={`${exportFilename}.csv`}
           onClose={() => setExportingCsv(false)}

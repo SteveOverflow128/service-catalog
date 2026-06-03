@@ -76,39 +76,30 @@ function buildEdge(e: Edge, i: number): ElementDefinition {
   };
 }
 
-export function buildEgoElements(index: CatalogIndex, ego: EgoGraph): ElementDefinition[] {
-  const nodes = [...ego.nodes].map((id) => buildNode(index, id, ego.rootId));
-  const edges = ego.edges.map((e, i) => buildEdge(e, i));
-  return [...nodes, ...edges];
+/** Render an explicit node-id set + edge list into cytoscape elements. `rootId`
+ *  (if any) gets the enlarged "root" treatment; pass '__none__' for rootless
+ *  subgraphs like mesh slices that have many seed services rather than one. */
+export function buildSubgraphElements(
+  index: CatalogIndex,
+  nodeIds: Set<string>,
+  edges: Edge[],
+  rootId = '__none__',
+): ElementDefinition[] {
+  const nodes = [...nodeIds].map((id) => buildNode(index, id, rootId));
+  return [...nodes, ...edges.map((e, i) => buildEdge(e, i))];
 }
 
-export function buildMeshElements(
-  index: CatalogIndex,
-  opts?: { serviceIds?: Set<string>; showDeps?: boolean },
-): ElementDefinition[] {
-  const { serviceIds, showDeps = true } = opts ?? {};
+export function buildEgoElements(index: CatalogIndex, ego: EgoGraph): ElementDefinition[] {
+  return buildSubgraphElements(index, ego.nodes, ego.edges, ego.rootId);
+}
 
-  if (!serviceIds) {
-    const ids = new Set<string>();
-    for (const s of index.services) ids.add(s.serviceId);
-    for (const id of index.externals.keys()) ids.add(id);
-    const nodes = [...ids].map((id) => buildNode(index, id, '__none__'));
-    const edges = index.allEdges.map((e, i) => buildEdge(e, i));
-    return [...nodes, ...edges];
-  }
-
-  if (!showDeps) {
-    return [...serviceIds].map((id) => buildNode(index, id, '__none__'));
-  }
-
-  // Filtered services + everything they depend on (cross-group services + externals).
-  const nodeIds = new Set<string>(serviceIds);
-  const edges = index.allEdges.filter((e) => serviceIds.has(e.from));
-  for (const e of edges) nodeIds.add(e.to);
-  return [
-    ...[...nodeIds].map((id) => buildNode(index, id, '__none__')),
-    ...edges.map((e, i) => buildEdge(e, i)),
-  ];
+/** Full, unfiltered mesh: every catalogued service + external stub, all edges.
+ *  Sliced/neighborhood views build from {@link buildSubgraphElements} instead. */
+export function buildMeshElements(index: CatalogIndex): ElementDefinition[] {
+  const ids = new Set<string>();
+  for (const s of index.services) ids.add(s.serviceId);
+  for (const id of index.externals.keys()) ids.add(id);
+  return buildSubgraphElements(index, ids, index.allEdges);
 }
 
 export const dagreLayout = (): LayoutOptions =>

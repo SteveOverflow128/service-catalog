@@ -94,8 +94,38 @@ export class CatalogIndex {
   /** Discover the node set reachable from root under a mode + hop limit, then
    *  return the induced forward-edge subgraph among those nodes. */
   ego(rootId: string, mode: MapMode, depth: Depth): EgoGraph {
-    const visited = new Set<string>([rootId]);
-    let frontier: string[] = [rootId];
+    const { nodes, edges } = this.neighborhood([rootId], mode, depth);
+    return { rootId, nodes, edges };
+  }
+
+  /** Set-rooted variant of {@link ego}: grow the neighborhood outward from a
+   *  whole set of seed services at once (e.g. every service in a mesh slice),
+   *  under the same mode + hop semantics. Seeds count as hop 0, so depth 1
+   *  yields the seeds plus their immediate neighbors. */
+  egoSet(roots: Iterable<string>, mode: MapMode, depth: Depth): { nodes: Set<string>; edges: Edge[] } {
+    return this.neighborhood(roots, mode, depth);
+  }
+
+  /** Induced forward-edge subgraph over exactly the given services — every
+   *  dependency edge whose both endpoints are in the set, and nothing reaching
+   *  outside it. Backs the mesh "services only" slice view (in-group arrows,
+   *  no external neighbors). */
+  induced(ids: Set<string>): { nodes: Set<string>; edges: Edge[] } {
+    const nodes = new Set(ids);
+    const edges = this.allEdges.filter((e) => nodes.has(e.from) && nodes.has(e.to));
+    return { nodes, edges };
+  }
+
+  /** Multi-source BFS shared by {@link ego} and {@link egoSet}. Grows the
+   *  reachable set from the seed roots under a mode + hop limit, then returns
+   *  the induced forward-edge subgraph among those nodes. No extra direction
+   *  test is needed on the induced edges — `allEdges` are all forward edges and
+   *  `visited` is grown by a single-direction BFS, so any induced edge is
+   *  already consistent with the explored direction (and in 'both' mode every
+   *  induced edge is relevant by definition). */
+  private neighborhood(roots: Iterable<string>, mode: MapMode, depth: Depth): { nodes: Set<string>; edges: Edge[] } {
+    const visited = new Set<string>(roots);
+    let frontier: string[] = [...visited];
     let hop = 0;
 
     while (frontier.length > 0 && (depth === 0 || hop < depth)) {
@@ -119,14 +149,8 @@ export class CatalogIndex {
       hop++;
     }
 
-    // Induced subgraph: every forward (depends-on) edge with both endpoints in
-    // the reachable set. No extra direction test is needed — `allEdges` are all
-    // forward edges and `visited` is grown by a single-direction BFS, so any
-    // induced edge is already consistent with the explored direction (and in
-    // 'both' mode every induced edge is relevant by definition).
     const edges = this.allEdges.filter((e) => visited.has(e.from) && visited.has(e.to));
-
-    return { rootId, nodes: visited, edges };
+    return { nodes: visited, edges };
   }
 }
 
