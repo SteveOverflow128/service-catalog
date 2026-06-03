@@ -20,7 +20,10 @@ const CLASS_DEF: Record<string, string> = {
 };
 
 export interface MermaidOptions {
+  /** One id (single-root map) — kept for back-compat; prefer rootIds. */
   rootId?: string;
+  /** Highlight a whole set of roots (multi-root map). */
+  rootIds?: string[];
   title?: string;
   direction?: 'LR' | 'TB';
 }
@@ -79,9 +82,11 @@ export function toMermaid(
     lines.push(`  class ${members.join(',')} ${cls};`);
   }
 
-  // Make the focal service unmistakable (bright thick stroke over its tier fill).
-  if (opts.rootId && ids.includes(opts.rootId)) {
-    lines.push(`  style ${nodeKey(opts.rootId)} stroke:#8ecbff,stroke-width:4px;`);
+  // Make the focal service(s) unmistakable (bright thick stroke over tier fill).
+  const idSet = new Set(ids);
+  const roots = opts.rootIds ?? (opts.rootId ? [opts.rootId] : []);
+  for (const rid of roots) {
+    if (idSet.has(rid)) lines.push(`  style ${nodeKey(rid)} stroke:#8ecbff,stroke-width:4px;`);
   }
 
   return lines.join('\n');
