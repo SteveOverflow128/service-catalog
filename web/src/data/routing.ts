@@ -5,14 +5,16 @@ export type AppView =
   | { kind: 'catalog' }
   | { kind: 'mesh' }
   | { kind: 'detail'; id: string }
-  | { kind: 'map'; rootIds: string[] };
+  | { kind: 'map'; rootIds: string[] }
+  | { kind: 'flow'; rootId: string };
 
 /** Parse a `window.location.hash` value into the view it represents.
  *  `#/`              catalog
  *  `#/mesh`          mesh
  *  `#/d/<id>`        full detail page
  *  `#/m/<id,id,…>`   dependency map seeded with one or more roots
- *  `#/s/<id>`        back-compat alias for a single-root map */
+ *  `#/s/<id>`        back-compat alias for a single-root map
+ *  `#/f/<id>`        focused dependency flow (Sankey) */
 export function parseHash(hash: string): AppView {
   const h = hash.replace(/^#\/?/, '');
   if (h === 'mesh') return { kind: 'mesh' };
@@ -29,6 +31,10 @@ export function parseHash(hash: string): AppView {
     const id = decodeURIComponent(h.slice(2));
     return id ? { kind: 'map', rootIds: [id] } : { kind: 'catalog' };
   }
+  if (h.startsWith('f/')) {
+    const rootId = decodeURIComponent(h.slice(2));
+    return rootId ? { kind: 'flow', rootId } : { kind: 'catalog' };
+  }
   return { kind: 'catalog' };
 }
 
@@ -41,6 +47,8 @@ export function viewToHash(view: AppView): string {
       return `#/d/${encodeURIComponent(view.id)}`;
     case 'map':
       return `#/m/${view.rootIds.map(encodeURIComponent).join(',')}`;
+    case 'flow':
+      return `#/f/${encodeURIComponent(view.rootId)}`;
     case 'catalog':
     default:
       return '#/';

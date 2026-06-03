@@ -27,6 +27,15 @@ describe('parseHash', () => {
   it('decodes percent-encoded ids', () => {
     expect(parseHash('#/d/a%2Fb')).toEqual({ kind: 'detail', id: 'a/b' });
   });
+  it('parses a flow view', () => {
+    expect(parseHash('#/f/clearing-api')).toEqual({ kind: 'flow', rootId: 'clearing-api' });
+  });
+  it('falls back to catalog for an empty flow id', () => {
+    expect(parseHash('#/f/')).toEqual({ kind: 'catalog' });
+  });
+  it('decodes percent-encoded flow ids', () => {
+    expect(parseHash('#/f/a%2Fb')).toEqual({ kind: 'flow', rootId: 'a/b' });
+  });
 });
 
 describe('viewToHash', () => {
@@ -35,6 +44,7 @@ describe('viewToHash', () => {
     [{ kind: 'mesh' }, '#/mesh'],
     [{ kind: 'detail', id: 'auth-service' }, '#/d/auth-service'],
     [{ kind: 'map', rootIds: ['auth-service', 'billing-api'] }, '#/m/auth-service,billing-api'],
+    [{ kind: 'flow', rootId: 'clearing-api' }, '#/f/clearing-api'],
   ];
   it.each(cases)('serializes %j', (view, hash) => {
     expect(viewToHash(view)).toBe(hash);
