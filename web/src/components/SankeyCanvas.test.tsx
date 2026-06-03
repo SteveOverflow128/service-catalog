@@ -29,4 +29,22 @@ describe('SankeyCanvas', () => {
     await userEvent.click(screen.getByTestId('flow-node-ext-x'));
     expect(onReroot).not.toHaveBeenCalled();
   });
+
+  it('zooms in via the toolbar, scaling the content group', async () => {
+    render(<SankeyCanvas layout={layout()} colorScheme="criticality" onReroot={() => {}} />);
+    const viewport = screen.getByTestId('sankey-viewport');
+    expect(viewport.getAttribute('transform')).toBe('translate(0 0) scale(1)');
+    await userEvent.click(screen.getByLabelText('Zoom in'));
+    const t = viewport.getAttribute('transform') ?? '';
+    const k = Number(t.match(/scale\(([^)]+)\)/)?.[1]);
+    expect(k).toBeGreaterThan(1);
+  });
+
+  it('fit resets the pan/zoom transform', async () => {
+    render(<SankeyCanvas layout={layout()} colorScheme="criticality" onReroot={() => {}} />);
+    await userEvent.click(screen.getByLabelText('Zoom in'));
+    await userEvent.click(screen.getByLabelText('Zoom out'));
+    await userEvent.click(screen.getByLabelText('Fit to view'));
+    expect(screen.getByTestId('sankey-viewport').getAttribute('transform')).toBe('translate(0 0) scale(1)');
+  });
 });

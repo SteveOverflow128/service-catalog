@@ -1881,13 +1881,13 @@ code.mono {
   background: var(--surface-1);
 }
 
-/* Canvas area: scrolls vertically if Sankey is tall; leave room for legend. */
+/* Canvas area: a clipped viewport — pan/zoom navigates the diagram inside it. */
 .flow__canvaswrap {
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow: auto;
-  padding: 12px 12px 56px;
+  overflow: hidden;
+  padding: 0;
 }
 .flow__empty {
   color: var(--text-lo);
@@ -1897,11 +1897,12 @@ code.mono {
   margin: 0;
 }
 
-/* Floating legend pinned to bottom-left of the canvas wrap. */
+/* Floating legend pinned to bottom-left of the canvas wrap, above the canvas. */
 .flow__legend {
-  position: sticky;
-  bottom: 8px;
-  left: 8px;
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 5;
   display: inline-flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -1911,7 +1912,6 @@ code.mono {
   border-radius: var(--r-md);
   backdrop-filter: blur(10px);
   pointer-events: none;
-  margin-top: 8px;
 }
 .flow__legenditem {
   display: inline-flex;
@@ -1930,12 +1930,20 @@ code.mono {
 
 /* ---- Sankey SVG canvas ------------------------------------------------- */
 
-/* SVG fills its container width; height is driven by viewBox. */
+/* Canvas fills the wrap; pan/zoom is an SVG transform on the content group. */
+.sankey-wrap {
+  position: absolute;
+  inset: 0;
+}
 .sankey {
   display: block;
   width: 100%;
-  height: auto;
-  overflow: visible; /* labels outside viewBox still render */
+  height: 100%;
+  cursor: grab;
+  touch-action: none; /* let drag pan instead of scrolling on touch */
+}
+.sankey:active {
+  cursor: grabbing;
 }
 
 /* Default node: mid-slate rectangle matching the observatory palette. */

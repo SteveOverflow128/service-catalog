@@ -10,8 +10,10 @@ import { FlowCsvExport } from './FlowCsvExport';
 import { toMermaidSankey } from '../graph/mermaid';
 import { CodeIcon, TableIcon, DownstreamIcon, UpstreamIcon, BothIcon } from './icons';
 
-const W = 1000;
-const H = 560;
+// Base viewport; the actual canvas grows with content so large graphs aren't
+// cramped at fit — zoom/pan then navigates the bigger figure.
+const BASE_W = 1000;
+const BASE_H = 560;
 
 const MODES: { key: MapMode; label: string; Icon: typeof BothIcon }[] = [
   { key: 'dependencies', label: 'Downstream', Icon: DownstreamIcon },
@@ -40,9 +42,21 @@ export function FlowView({
   const [exporting, setExporting] = useState<null | 'mermaid' | 'csv'>(null);
 
   const focus = index.byId.get(rootId);
-  const layout = useMemo(
-    () => buildFlowLayout(index, rootId, { mode, depth, width: W, height: H }),
+  // First pass at base size to learn the graph's shape (column count + tallest
+  // column are independent of the canvas dimensions), then size the canvas to
+  // the content and re-lay-out only if it needs to be bigger.
+  const probe = useMemo(
+    () => buildFlowLayout(index, rootId, { mode, depth, width: BASE_W, height: BASE_H }),
     [index, rootId, mode, depth],
+  );
+  const W = Math.max(BASE_W, probe.columns.length * 190);
+  const H = Math.max(BASE_H, Math.max(1, ...probe.columns.map((c) => c.nodes.length)) * 26 + 80);
+  const layout = useMemo(
+    () =>
+      W === BASE_W && H === BASE_H
+        ? probe
+        : buildFlowLayout(index, rootId, { mode, depth, width: W, height: H }),
+    [index, rootId, mode, depth, W, H, probe],
   );
 
   const downstreamEmpty = mode === 'dependencies' && layout.links.length === 0;
@@ -114,7 +128,7 @@ export function FlowView({
             {focus?.name ?? rootId} has no downstream dependencies — try Upstream or Both.
           </p>
         ) : (
-          <SankeyCanvas layout={layout} colorScheme={scheme} onReroot={onReroot} width={W} height={H} />
+          <SankeyCanvas layout={layout} colorScheme={scheme} onReroot={onReroot} width={W} height={H} key={`${rootId}-${mode}-${depth}`} />
         )}
         <div className="flow__legend">
           {legendFor(scheme).slice(0, 8).map((it) => (
