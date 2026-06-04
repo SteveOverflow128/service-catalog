@@ -1,5 +1,6 @@
-import { classificationStyles, lifecycleStyles, tierStyle } from '../design/tokens';
+import { classificationStyles, infraColor, lifecycleStyles, tierStyle } from '../design/tokens';
 import type { CriticalityTier, DataClassification, Lifecycle } from '../types';
+import { ServerIcon } from './icons';
 
 export function TierBadge({ tier, size = 'md' }: { tier: CriticalityTier; size?: 'sm' | 'md' }) {
   const t = tierStyle(tier);
@@ -37,6 +38,21 @@ export function ClassificationBadge({ value }: { value: DataClassification }) {
       style={{ ['--c' as string]: c.color, ['--bg' as string]: c.bg }}
     >
       {c.label}
+    </span>
+  );
+}
+
+/** Marks a service as ambient infrastructure (hidden by default in the graph
+ *  views). Render conditionally on `service.infrastructure`. */
+export function InfrastructureBadge() {
+  return (
+    <span
+      className="badge badge--infra"
+      style={{ ['--c' as string]: infraColor }}
+      title="Ambient infrastructure / network dependency — hidden by default in graph views"
+    >
+      <ServerIcon width={11} height={11} />
+      Infra
     </span>
   );
 }

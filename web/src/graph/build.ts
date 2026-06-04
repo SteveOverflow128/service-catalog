@@ -26,6 +26,7 @@ function buildNode(index: CatalogIndex, id: string, roots: ReadonlySet<string>):
         label: s.name,
         kind: 'service',
         isRoot,
+        infra: s.infrastructure ?? false,
         color: tierStyle(s.criticalityTier).color,
         size: nodeSize(deg, isRoot),
         tier: String(s.criticalityTier),

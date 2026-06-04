@@ -29,6 +29,11 @@ export default function App() {
   const [lastTopView, setLastTopView] = useState<'catalog' | 'mesh' | 'flow'>('catalog');
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
+  // Shared across map/mesh/flow: whether ambient infrastructure nodes are shown.
+  // Hidden by default — almost everything links to them, so they otherwise
+  // drown out the real topology. Lifting it here makes the choice stick as the
+  // user moves between the three graph views.
+  const [showInfrastructure, setShowInfrastructure] = useState(false);
 
   // Remember the last top-level view so "back" from a map/detail returns there.
   useEffect(() => {
@@ -59,6 +64,7 @@ export default function App() {
   }, []);
 
   const clearFilters = useCallback(() => setFilters(emptyFilters()), []);
+  const toggleInfra = useCallback(() => setShowInfrastructure((v) => !v), []);
 
   const openDetail = useCallback((id: string) => setView({ kind: 'detail', id }), []);
   const openFlow = useCallback((id: string) => setView({ kind: 'flow', rootId: id }), []);
@@ -121,7 +127,7 @@ export default function App() {
     );
   }
 
-  const { index } = state;
+  const { index, indexNoInfra } = state;
   const facets = deriveFacets(index.services);
 
   const detailService = view.kind === 'detail' ? index.byId.get(view.id) : undefined;
@@ -132,6 +138,14 @@ export default function App() {
     view.kind === 'flow'
       ? (index.byId.has(view.rootId) ? view.rootId : busiestHub(index))
       : '';
+
+  // The graph the three views traverse: the infra-pruned index unless the user
+  // has toggled infrastructure on. Root guard: a map/flow focused on an infra
+  // service must use the full index so its own focus node is never pruned away.
+  const isInfra = (id: string): boolean => !!index.byId.get(id)?.infrastructure;
+  const meshIndex = showInfrastructure ? index : indexNoInfra;
+  const mapIndex = showInfrastructure || mapRootIds.some(isInfra) ? index : indexNoInfra;
+  const flowIndex = showInfrastructure || isInfra(flowRootId) ? index : indexNoInfra;
 
   return (
     <div className="app">
@@ -186,10 +200,12 @@ export default function App() {
                 />
               )}
               <DependencyMap
-                index={index}
+                index={mapIndex}
                 rootIds={mapRootIds}
                 onReroot={reroot}
                 onToggleRoot={toggleRoot}
+                showInfra={showInfrastructure}
+                onToggleInfra={toggleInfra}
               />
             </div>
           </div>
@@ -202,10 +218,21 @@ export default function App() {
               </button>
               <span className="detail__crumb mono">/ flow / {flowRootId}</span>
             </div>
-            <FlowView index={index} rootId={flowRootId} onReroot={openFlow} />
+            <FlowView
+              index={flowIndex}
+              rootId={flowRootId}
+              onReroot={openFlow}
+              showInfra={showInfrastructure}
+              onToggleInfra={toggleInfra}
+            />
           </div>
         ) : view.kind === 'mesh' ? (
-          <MeshView index={index} onSelectNode={reroot} />
+          <MeshView
+            index={meshIndex}
+            onSelectNode={reroot}
+            showInfra={showInfrastructure}
+            onToggleInfra={toggleInfra}
+          />
         ) : (
           <CatalogView
             index={index}

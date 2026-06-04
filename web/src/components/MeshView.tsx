@@ -7,6 +7,7 @@ import { GraphCanvas } from './GraphCanvas';
 import { Legend } from './Legend';
 import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
+import { InfraToggle } from './InfraToggle';
 import { BothIcon, CodeIcon, DownstreamIcon, TableIcon, UpstreamIcon } from './icons';
 
 type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'resource.type' | 'resource.provider' | 'resource.region' | 'criticalityTier' | 'team';
@@ -82,9 +83,13 @@ function filterByDim(services: Service[], dim: GroupByDim, value: string): Servi
 export function MeshView({
   index,
   onSelectNode,
+  showInfra,
+  onToggleInfra,
 }: {
   index: CatalogIndex;
   onSelectNode: (id: string) => void;
+  showInfra: boolean;
+  onToggleInfra: () => void;
 }) {
   const [dim, setDim] = useState<GroupByDim | null>(null);
   const [dimValue, setDimValue] = useState<string | null>(null);
@@ -272,6 +277,10 @@ export function MeshView({
             </div>
           </div>
         )}
+
+        <span style={{ marginLeft: 'auto' }}>
+          <InfraToggle on={showInfra} onToggle={onToggleInfra} />
+        </span>
       </div>
 
       <div className="mesh__canvaswrap">

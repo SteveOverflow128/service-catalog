@@ -169,6 +169,14 @@ export const TableIcon = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const ServerIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="7" rx="1.6" />
+    <rect x="3" y="13" width="18" height="7" rx="1.6" />
+    <path d="M7 7.5h.01M7 16.5h.01M16 7.5h2M16 16.5h2" />
+  </svg>
+);
+
 export const FlowIcon = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base({ fill: 'none', ...p })}>
     <rect x="2" y="3" width="3" height="7" rx="1" fill="currentColor" stroke="none" />

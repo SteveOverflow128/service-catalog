@@ -6,19 +6,19 @@ import { makeIndex } from '../test/fixtures';
 
 describe('FlowView', () => {
   it('renders the focus and its downstream nodes', () => {
-    render(<FlowView index={makeIndex()} rootId="a" onReroot={() => {}} />);
+    render(<FlowView index={makeIndex()} rootId="a" onReroot={() => {}} showInfra={false} onToggleInfra={() => {}} />);
     expect(screen.getByTestId('flow-node-b')).toBeInTheDocument();
   });
 
   it('reroots when a node is clicked', async () => {
     const onReroot = vi.fn();
-    render(<FlowView index={makeIndex()} rootId="a" onReroot={onReroot} />);
+    render(<FlowView index={makeIndex()} rootId="a" onReroot={onReroot} showInfra={false} onToggleInfra={() => {}} />);
     await userEvent.click(screen.getByTestId('flow-node-b'));
     expect(onReroot).toHaveBeenCalledWith('b');
   });
 
   it('switches direction without crashing', async () => {
-    render(<FlowView index={makeIndex()} rootId="c" onReroot={() => {}} />);
+    render(<FlowView index={makeIndex()} rootId="c" onReroot={() => {}} showInfra={false} onToggleInfra={() => {}} />);
     await userEvent.click(screen.getByRole('tab', { name: /upstream/i }));
     expect(screen.getByTestId('flow-node-b')).toBeInTheDocument(); // b is upstream of c
   });

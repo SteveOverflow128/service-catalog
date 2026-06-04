@@ -160,6 +160,32 @@ function push<T>(map: Map<string, T[]>, key: string, value: T): void {
   else map.set(key, [value]);
 }
 
+/**
+ * Returns a copy of the catalog with every `infrastructure: true` service
+ * removed AND every dependency edge that pointed at one of them stripped from
+ * the survivors. Dropping the edges too is what keeps the index constructor
+ * from synthesizing phantom external stubs for the removed infra ids. A service
+ * without the flag (`undefined`/`null`) is treated as non-infra and kept.
+ *
+ * Pure + cheap: returns the original catalog unchanged when nothing is flagged.
+ */
+export function withoutInfrastructure(catalog: Catalog): Catalog {
+  const infraIds = new Set(
+    catalog.services.filter((s) => s.infrastructure ?? false).map((s) => s.serviceId),
+  );
+  if (infraIds.size === 0) return catalog;
+
+  const services = catalog.services
+    .filter((s) => !infraIds.has(s.serviceId))
+    .map((s) =>
+      s.dependencies?.some((d) => infraIds.has(d.serviceId))
+        ? { ...s, dependencies: s.dependencies.filter((d) => !infraIds.has(d.serviceId)) }
+        : s,
+    );
+
+  return { ...catalog, count: services.length, services };
+}
+
 // ---- Facet derivation for the filter rail -------------------------------
 
 export interface Facets {

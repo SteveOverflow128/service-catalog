@@ -1,5 +1,5 @@
 import type { StylesheetStyle } from 'cytoscape';
-import { edgeColors } from '../design/tokens';
+import { edgeColors, infraColor } from '../design/tokens';
 
 // Cytoscape stylesheet for the dependency map. Nodes are tier-colored discs
 // (external systems are dashed diamonds); the focal node carries a glowing
@@ -43,6 +43,15 @@ export const cyStylesheet: StylesheetStyle[] = [
     'background-color': edgeColors.external,
     'border-color': edgeColors.external,
     color: '#d9c8f4',
+  }),
+  // Ambient infrastructure nodes (only visible when the infra toggle is on):
+  // a hexagon with a dashed steel-cyan border marks the shared layer apart from
+  // ordinary service discs, while the tier color is kept for the underlay.
+  rule('node[?infra]', {
+    shape: 'round-hexagon',
+    'border-style': 'dashed',
+    'border-color': infraColor,
+    'border-width': 2,
   }),
   rule('node[?isRoot]', {
     'background-opacity': 0.28,

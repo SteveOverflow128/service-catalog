@@ -1,4 +1,4 @@
-import { edgeColors, tierStyles } from '../design/tokens';
+import { edgeColors, infraColor, tierStyles } from '../design/tokens';
 
 const tierOrder = ['0', '1', '2', '3', '?'];
 
@@ -30,6 +30,13 @@ export function Legend() {
           <span className="legend__item">
             <span className="legend__line legend__line--dash" style={{ color: edgeColors.external }} />
             external ↗
+          </span>
+          <span className="legend__item">
+            <span
+              className="legend__dot"
+              style={{ background: 'transparent', border: `1.5px dashed ${infraColor}`, borderRadius: 3 }}
+            />
+            infra ⬡
           </span>
         </div>
       </div>

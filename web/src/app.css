@@ -573,6 +573,11 @@ code.mono {
   letter-spacing: 0.1em;
   font-weight: 600;
 }
+.badge--infra {
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
+}
 
 .chip {
   display: inline-flex;
@@ -986,6 +991,29 @@ code.mono {
 .depthbtn--on {
   color: var(--text-hi);
   background: var(--surface-raised);
+}
+/* Standalone include/exclude-infrastructure toggle, shared by map/mesh/flow. */
+.infratoggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  color: var(--text-lo);
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: color 0.16s, background 0.16s, border-color 0.16s;
+}
+.infratoggle:hover {
+  color: var(--text-mid);
+}
+.infratoggle--on {
+  color: var(--infra);
+  background: color-mix(in srgb, var(--infra) 14%, transparent);
+  border-color: color-mix(in srgb, var(--infra) 42%, transparent);
 }
 .mapstats {
   display: flex;

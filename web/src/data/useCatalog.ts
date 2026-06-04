@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { Catalog } from '../types';
-import { CatalogIndex } from './catalog';
+import { CatalogIndex, withoutInfrastructure } from './catalog';
 
 type State =
   | { status: 'loading' }
   | { status: 'error'; error: string }
-  | { status: 'ready'; index: CatalogIndex };
+  // `index` is the full graph; `indexNoInfra` drops ambient infrastructure
+  // nodes (and edges to them). The graph views switch between them via the
+  // shared "show infrastructure" toggle.
+  | { status: 'ready'; index: CatalogIndex; indexNoInfra: CatalogIndex };
 
 /** Fetches the generated catalog.json and builds the in-memory graph index. */
 export function useCatalog(): State {
@@ -23,7 +26,11 @@ export function useCatalog(): State {
       })
       .then((catalog) => {
         if (cancelled) return;
-        setState({ status: 'ready', index: new CatalogIndex(catalog) });
+        setState({
+          status: 'ready',
+          index: new CatalogIndex(catalog),
+          indexNoInfra: new CatalogIndex(withoutInfrastructure(catalog)),
+        });
       })
       .catch((err: unknown) => {
         if (cancelled) return;

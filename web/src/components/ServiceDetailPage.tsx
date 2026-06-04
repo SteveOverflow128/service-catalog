@@ -2,7 +2,7 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { interactionStyle, tierStyle } from '../design/tokens';
-import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
+import { ClassificationBadge, InfrastructureBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
 import {
   ArrowRight,
   CheckIcon,
@@ -407,6 +407,7 @@ export function ServiceDetailPage({
               <TierBadge tier={service.criticalityTier} />
               <LifecycleBadge lifecycle={service.lifecycle} />
               <ClassificationBadge value={service.dataClassification} />
+              {service.infrastructure && <InfrastructureBadge />}
               <VerifiedBadge verificationDate={service.verificationDate} />
             </div>
             <h1 className="svc-page__name h-display">{service.name}</h1>

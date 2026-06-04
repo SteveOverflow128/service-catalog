@@ -7,6 +7,7 @@ import { GraphCanvas } from './GraphCanvas';
 import { Legend } from './Legend';
 import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
+import { InfraToggle } from './InfraToggle';
 import { BothIcon, CodeIcon, DownstreamIcon, TableIcon, UpstreamIcon } from './icons';
 
 const MODES: { key: MapMode; label: string; hint: string; Icon: typeof BothIcon }[] = [
@@ -26,6 +27,8 @@ export function DependencyMap({
   rootIds,
   onReroot,
   onToggleRoot,
+  showInfra,
+  onToggleInfra,
 }: {
   index: CatalogIndex;
   rootIds: string[];
@@ -33,6 +36,8 @@ export function DependencyMap({
   onReroot: (id: string) => void;
   /** ⌘/Ctrl+click on a node → add/remove it from the root set */
   onToggleRoot: (id: string) => void;
+  showInfra: boolean;
+  onToggleInfra: () => void;
 }) {
   const [mode, setMode] = useState<MapMode>('both');
   const [depth, setDepth] = useState<Depth>(1);
@@ -96,6 +101,8 @@ export function DependencyMap({
             </button>
           ))}
         </div>
+
+        <InfraToggle on={showInfra} onToggle={onToggleInfra} />
 
         <div className="mapstats mono">
           <span><b>{ego.nodes.size}</b> nodes</span>

@@ -1,7 +1,7 @@
 import type { CatalogIndex } from '../data/catalog';
 import type { Service } from '../types';
 import { tierStyle } from '../design/tokens';
-import { ClassificationBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
+import { ClassificationBadge, InfrastructureBadge, LifecycleBadge, TierBadge, VerifiedBadge } from './Badges';
 import { ArrowRight, FlowIcon } from './icons';
 
 /** Normalize to "YYYY-MM-DD", or "unknown" when absent/unparseable. */
@@ -59,6 +59,7 @@ export function ServiceCard({
       <div className="svc-card__top">
         <TierBadge tier={service.criticalityTier} size="sm" />
         <LifecycleBadge lifecycle={service.lifecycle} />
+        {service.infrastructure && <InfrastructureBadge />}
         <VerifiedBadge verificationDate={service.verificationDate} className="svc-card__verified" />
       </div>
 

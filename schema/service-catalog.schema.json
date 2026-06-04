@@ -39,6 +39,11 @@
 
     "dataClassification": { "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"] },
 
+    "infrastructure": {
+      "type": "boolean",
+      "description": "Marks an ambient infrastructure / network dependency (logging, mesh, secrets, config, etc.) that nearly every service links to. Hidden by default in the graph views; absent is treated as false."
+    },
+
     "resources": {
       "type": "array",
       "description": "Provider-managed resources and on-prem equivalents this service provisions or runs on.",

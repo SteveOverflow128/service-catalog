@@ -88,3 +88,7 @@ export const edgeColors = {
   external: '#9F7BD6',
   dim: 'rgba(120,150,190,0.18)',
 } as const;
+
+// Ambient infrastructure layer. Mirrors --infra in theme.css; used by the infra
+// badge and the distinct infra node treatment in the graph stylesheet.
+export const infraColor = '#5FB3C6';

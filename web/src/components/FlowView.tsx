@@ -7,6 +7,7 @@ import { legendFor } from '../graph/flowColor';
 import { SankeyCanvas } from './SankeyCanvas';
 import { MermaidExport } from './MermaidExport';
 import { FlowCsvExport } from './FlowCsvExport';
+import { InfraToggle } from './InfraToggle';
 import { toMermaidSankey } from '../graph/mermaid';
 import { CodeIcon, TableIcon, DownstreamIcon, UpstreamIcon, BothIcon } from './icons';
 
@@ -30,11 +31,13 @@ const SCHEMES: { key: ColorScheme; label: string }[] = [
 ];
 
 export function FlowView({
-  index, rootId, onReroot,
+  index, rootId, onReroot, showInfra, onToggleInfra,
 }: {
   index: CatalogIndex;
   rootId: string;
   onReroot: (id: string) => void;
+  showInfra: boolean;
+  onToggleInfra: () => void;
 }) {
   const [mode, setMode] = useState<MapMode>('dependencies');
   const [depth, setDepth] = useState<Depth>(2);
@@ -120,6 +123,8 @@ export function FlowView({
             </button>
           ))}
         </div>
+
+        <InfraToggle on={showInfra} onToggle={onToggleInfra} />
       </div>
 
       <div className="flow__canvaswrap">

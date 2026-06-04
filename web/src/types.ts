@@ -98,6 +98,10 @@ export interface Service {
   train?: string;
   jiraPrefix?: string;
   dataClassification: DataClassification;
+  /** Ambient infrastructure / network dependency that nearly everything links
+   *  to (logging, mesh, secrets, config, …). Hidden by default in the graph
+   *  views; absent ⇒ treated as false. */
+  infrastructure?: boolean;
   catalogGroup?: string;
   drStrategy?: string;
   processingModesSupported?: string[];
