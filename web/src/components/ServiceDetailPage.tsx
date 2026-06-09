@@ -139,7 +139,7 @@ function DepRow({
 
 // ---- JSON Editor ---------------------------------------------------------
 
-function JsonEditor({ service }: { service: Service }) {
+function JsonEditor({ service, onSaved }: { service: Service; onSaved?: () => void }) {
   const clean = useMemo(() => JSON.stringify(withoutSource(service), null, 2), [service]);
 
   const [text, setText] = useState(clean);
@@ -185,6 +185,11 @@ function JsonEditor({ service }: { service: Service }) {
       if (data.ok) {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
+        // Re-read the catalog from disk. We don't rely on the dev server's
+        // data/ file-watch reload — it's flaky across platforms (notably WSL2),
+        // and when it misses, reopening this editor reseeds from the stale
+        // in-memory service and edits (e.g. removed dependencies) reappear.
+        onSaved?.();
       } else {
         setSchemaErrors(data.errors ?? ['Unknown validation error']);
       }
@@ -236,7 +241,7 @@ function JsonEditor({ service }: { service: Service }) {
 /** Captures a userId and stamps verifiedBy + verificationDate (today) onto the
  *  service — WITHOUT touching lastUpdatedDate. Writes via the dev save endpoint;
  *  the resulting data/ change triggers a live reload that refreshes the badge. */
-function VerifyDialog({ service, onClose }: { service: Service; onClose: () => void }) {
+function VerifyDialog({ service, onClose, onSaved }: { service: Service; onClose: () => void; onSaved?: () => void }) {
   const today = todayISO();
   const [userId, setUserId] = useState('');
   const [saving, setSaving] = useState(false);
@@ -264,8 +269,10 @@ function VerifyDialog({ service, onClose }: { service: Service; onClose: () => v
         body: JSON.stringify(payload, null, 2),
       });
       const data = (await res.json()) as { ok: boolean; errors?: string[] };
-      if (data.ok) setDone(true);
-      else setErrors(data.errors ?? ['Unknown validation error']);
+      if (data.ok) {
+        setDone(true);
+        onSaved?.();
+      } else setErrors(data.errors ?? ['Unknown validation error']);
     } catch {
       setErrors(['Network error — is the dev server running?']);
     }
@@ -343,6 +350,7 @@ export function ServiceDetailPage({
   onOpenMap,
   onOpenFlow,
   onSelectNode,
+  onSaved,
 }: {
   service: Service;
   index: CatalogIndex;
@@ -350,6 +358,7 @@ export function ServiceDetailPage({
   onOpenMap: (id: string) => void;
   onOpenFlow?: (id: string) => void;
   onSelectNode: (id: string) => void;
+  onSaved?: () => void;
 }) {
   const [jsonOpen, setJsonOpen] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
@@ -395,7 +404,7 @@ export function ServiceDetailPage({
         </div>
       </div>
 
-      {verifyOpen && <VerifyDialog service={service} onClose={() => setVerifyOpen(false)} />}
+      {verifyOpen && <VerifyDialog service={service} onClose={() => setVerifyOpen(false)} onSaved={onSaved} />}
 
       {/* ── Body ── */}
       <div className="svc-page__body scrolly">
@@ -626,7 +635,7 @@ export function ServiceDetailPage({
             </button>
             {jsonOpen && (
               <div className="json-accordion__body">
-                <JsonEditor service={service} />
+                <JsonEditor service={service} onSaved={onSaved} />
               </div>
             )}
           </div>

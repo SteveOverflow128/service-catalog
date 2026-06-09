@@ -170,6 +170,7 @@ export default function App() {
             onOpenMap={reroot}
             onOpenFlow={openFlow}
             onSelectNode={openDetail}
+            onSaved={state.refetch}
           />
         ) : view.kind === 'map' && mapRootIds.length > 0 ? (
           <div className="detail" key={mapRootIds.join(',')}>
