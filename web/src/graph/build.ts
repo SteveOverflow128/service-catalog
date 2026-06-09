@@ -92,11 +92,26 @@ export function buildSubgraphElements(
   return [...nodes, ...edges.map((e, i) => buildEdge(e, i))];
 }
 
-/** Full, unfiltered mesh: every catalogued service + external stub, all edges. */
-export function buildMeshElements(index: CatalogIndex): ElementDefinition[] {
+/** Full mesh: every catalogued service + external stub, all edges. With
+ *  `pruneIsolated`, nodes are taken from the surviving edges instead of from
+ *  every service — so services left edgeless by an active edge filter (e.g.
+ *  hide non-critical) drop out. `pruneIsolated` only has an effect when `index`
+ *  is already the filtered graph (its `allEdges` is the post-filter set); it is
+ *  not itself a filter. */
+export function buildMeshElements(
+  index: CatalogIndex,
+  opts: { pruneIsolated?: boolean } = {},
+): ElementDefinition[] {
   const ids = new Set<string>();
-  for (const s of index.services) ids.add(s.serviceId);
-  for (const id of index.externals.keys()) ids.add(id);
+  if (opts.pruneIsolated) {
+    for (const e of index.allEdges) {
+      ids.add(e.from);
+      ids.add(e.to);
+    }
+  } else {
+    for (const s of index.services) ids.add(s.serviceId);
+    for (const id of index.externals.keys()) ids.add(id);
+  }
   return buildSubgraphElements(index, ids, index.allEdges);
 }
 

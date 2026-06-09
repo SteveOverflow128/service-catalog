@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { ElementDefinition } from 'cytoscape';
-import { buildSubgraphElements } from './build';
+import { buildSubgraphElements, buildMeshElements } from './build';
 import { makeIndex } from '../test/fixtures';
 
 function nodeById(els: ElementDefinition[], id: string) {
@@ -23,5 +23,20 @@ describe('buildSubgraphElements', () => {
     const els = buildSubgraphElements(index, new Set(['a', 'b']), []);
     expect(nodeById(els, 'a')!.isRoot).toBe(false);
     expect(nodeById(els, 'b')!.isRoot).toBe(false);
+  });
+});
+
+describe('buildMeshElements pruneIsolated', () => {
+  it('includes the edgeless service by default', () => {
+    const els = buildMeshElements(makeIndex());
+    expect(nodeById(els, 'd')).toBeDefined(); // 'd' has no edges but still shows
+  });
+
+  it('drops zero-degree service nodes when pruneIsolated is set', () => {
+    const els = buildMeshElements(makeIndex(), { pruneIsolated: true });
+    expect(nodeById(els, 'd')).toBeUndefined(); // 'd' has no edges -> pruned
+    expect(nodeById(els, 'a')).toBeDefined();   // 'a' still has the a -> b edge
+    expect(nodeById(els, 'c')).toBeDefined();     // mid/leaf chain node kept via edges
+    expect(nodeById(els, 'ext-x')).toBeDefined(); // external included via its edge endpoint
   });
 });
