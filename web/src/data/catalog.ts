@@ -186,6 +186,27 @@ export function withoutInfrastructure(catalog: Catalog): Catalog {
   return { ...catalog, count: services.length, services };
 }
 
+/**
+ * Returns a copy of the catalog with every non-critical dependency edge
+ * (`critical !== true`) stripped from every service. Service records are
+ * untouched — only edges are removed. Stripping the edges (rather than hiding
+ * them downstream) keeps the index constructor from synthesizing phantom
+ * external stubs for targets that were only reached non-critically.
+ *
+ * Pure + cheap: returns the original catalog unchanged when no service has a
+ * non-critical dependency.
+ */
+export function withoutNonCritical(catalog: Catalog): Catalog {
+  let changed = false;
+  const services = catalog.services.map((s) => {
+    if (!s.dependencies?.some((d) => d.critical !== true)) return s;
+    changed = true;
+    return { ...s, dependencies: s.dependencies.filter((d) => d.critical === true) };
+  });
+  if (!changed) return catalog;
+  return { ...catalog, services };
+}
+
 // ---- Facet derivation for the filter rail -------------------------------
 
 export interface Facets {

@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { makeIndex, makeService } from '../test/fixtures';
-import { CatalogIndex, withoutInfrastructure } from './catalog';
+import { CatalogIndex, withoutInfrastructure, withoutNonCritical } from './catalog';
 import type { Catalog, Dependency } from '../types';
 
 function dep(serviceId: string): Dependency {
   return { serviceId, interaction: 'sync-http', critical: false, purpose: 'test', external: false };
+}
+
+function critDep(serviceId: string): Dependency {
+  return { serviceId, interaction: 'sync-http', critical: true, purpose: 'test', external: false };
 }
 
 describe('CatalogIndex.egoSet', () => {
@@ -78,5 +82,57 @@ describe('withoutInfrastructure', () => {
     const pruned = withoutInfrastructure(catalog);
     expect(pruned).toBe(catalog); // same reference — nothing flagged
     expect(pruned.services).toHaveLength(3);
+  });
+});
+
+describe('withoutNonCritical', () => {
+  // a -> b (non-critical), a -> c (critical), c -> ext-x (non-critical).
+  // Filtering keeps only a -> c; b and ext-x become unreferenced.
+  function mixedCatalog(): Catalog {
+    const services = [
+      makeService({ serviceId: 'a', dependencies: [dep('b'), critDep('c')] }),
+      makeService({ serviceId: 'b' }),
+      makeService({ serviceId: 'c', dependencies: [dep('ext-x')] }),
+    ];
+    return { generatedFrom: 'test', count: services.length, services };
+  }
+
+  it('keeps every service record and the count', () => {
+    const pruned = withoutNonCritical(mixedCatalog());
+    expect(pruned.services.map((s) => s.serviceId).sort()).toEqual(['a', 'b', 'c']);
+    expect(pruned.count).toBe(3);
+  });
+
+  it('strips every non-critical edge, keeping only critical ones', () => {
+    const index = new CatalogIndex(withoutNonCritical(mixedCatalog()));
+    expect(index.allEdges).toHaveLength(1);
+    expect(index.allEdges.every((e) => e.dep.critical)).toBe(true);
+    expect(index.dependenciesOf('a').map((e) => e.to)).toEqual(['c']); // a -> b gone
+  });
+
+  it('leaves no phantom external stub for a target only reached non-critically', () => {
+    const index = new CatalogIndex(withoutNonCritical(mixedCatalog()));
+    expect(index.externals.has('ext-x')).toBe(false); // c -> ext-x was non-critical
+  });
+
+  it('returns the catalog unchanged when nothing is non-critical', () => {
+    const services = [makeService({ serviceId: 'a', dependencies: [critDep('b')] })];
+    const catalog: Catalog = { generatedFrom: 'test', count: 1, services };
+    const pruned = withoutNonCritical(catalog);
+    expect(pruned).toBe(catalog); // same reference
+  });
+
+  it('composes with withoutInfrastructure', () => {
+    // a -> infra-b (critical), a -> c (non-critical). Both filters: drop infra-b
+    // node AND the non-critical a -> c edge, leaving just node a (+ c) no edges.
+    const services = [
+      makeService({ serviceId: 'a', dependencies: [critDep('infra-b'), dep('c')] }),
+      makeService({ serviceId: 'infra-b', infrastructure: true }),
+      makeService({ serviceId: 'c' }),
+    ];
+    const catalog: Catalog = { generatedFrom: 'test', count: 3, services };
+    const index = new CatalogIndex(withoutNonCritical(withoutInfrastructure(catalog)));
+    expect(index.byId.has('infra-b')).toBe(false);
+    expect(index.allEdges).toHaveLength(0); // critical edge pointed at removed infra; non-critical stripped
   });
 });
