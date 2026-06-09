@@ -992,8 +992,8 @@ code.mono {
   color: var(--text-hi);
   background: var(--surface-raised);
 }
-/* Standalone include/exclude-infrastructure toggle, shared by map/mesh/flow. */
-.infratoggle {
+/* Generic include/exclude toggle pill, shared by map/mesh/flow. */
+.graphtoggle {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -1007,13 +1007,18 @@ code.mono {
   cursor: pointer;
   transition: color 0.16s, background 0.16s, border-color 0.16s;
 }
-.infratoggle:hover {
+.graphtoggle:hover {
   color: var(--text-mid);
 }
-.infratoggle--on {
+.graphtoggle--on.graphtoggle--infra {
   color: var(--infra);
   background: color-mix(in srgb, var(--infra) 14%, transparent);
   border-color: color-mix(in srgb, var(--infra) 42%, transparent);
+}
+.graphtoggle--on.graphtoggle--critical {
+  color: var(--critical);
+  background: color-mix(in srgb, var(--critical) 14%, transparent);
+  border-color: color-mix(in srgb, var(--critical) 42%, transparent);
 }
 .mapstats {
   display: flex;

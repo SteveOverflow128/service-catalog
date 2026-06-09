@@ -186,3 +186,9 @@ export const FlowIcon = (p: SVGProps<SVGSVGElement>) => (
     <path d="M5 17 C12 17 12 11.5 19 11.5" strokeWidth="1.6" opacity="0.35" fill="none" stroke="currentColor" />
   </svg>
 );
+
+export const BoltIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" />
+  </svg>
+);

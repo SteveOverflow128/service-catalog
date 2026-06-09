@@ -43,12 +43,13 @@
   --accent: #519ee6;
   --accent-bright: #6cafe7;
   --accent-deep: #1552bc;
-  --signal-crit: #ff4d5e;
+  --signal-crit: #ff4d5e; /* graph edge severity; distinct tint from --critical toggle accent */
   --signal-ok: #4fd6a0;
   --signal-warn: #e8b84b;
   /* Ambient infrastructure layer — distinct from tier (red/amber/blue/green)
      and external (violet) so infra nodes/badges read at a glance. */
   --infra: #5fb3c6;
+  --critical: #ff6b79; /* mirrors edgeColors.critical in tokens.ts */
 
   /* --- Type --- */
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
