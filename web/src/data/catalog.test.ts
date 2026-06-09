@@ -122,6 +122,21 @@ describe('withoutNonCritical', () => {
     expect(pruned).toBe(catalog); // same reference
   });
 
+  it('leaves edgeless-after-filter services with a zero incident-edge count', () => {
+    // MeshView's full-mesh `pruneIsolated` (under Critical only) drops services
+    // with no incident edge, and `fullMeshServices` mirrors that with the
+    // `dependencyCount + dependantCount > 0` predicate. b's only edge (a -> b)
+    // was non-critical, so post-filter it must read as 0 and be pruned, while
+    // the critical pair a/c stays.
+    const index = new CatalogIndex(withoutNonCritical(mixedCatalog()));
+    const incident = (id: string) => index.dependencyCount(id) + index.dependantCount(id);
+    expect(incident('b')).toBe(0); // pruned from the canvas + exports + stats
+    expect(incident('a')).toBeGreaterThan(0); // a -> c
+    expect(incident('c')).toBeGreaterThan(0);
+    const kept = index.services.filter((s) => incident(s.serviceId) > 0).map((s) => s.serviceId);
+    expect(kept.sort()).toEqual(['a', 'c']);
+  });
+
   it('composes with withoutInfrastructure', () => {
     // a -> infra-b (critical), a -> c (non-critical). Both filters: drop infra-b
     // node AND the non-critical a -> c edge, leaving just node a (+ c) no edges.

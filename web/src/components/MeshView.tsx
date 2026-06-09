@@ -145,13 +145,26 @@ export function MeshView({
 
   const visibleEdges = neighborhood ? neighborhood.edges : index.allEdges;
 
+  // On the full-mesh path, `pruneIsolated` drops services left edgeless by the
+  // critical filter from the canvas. Mirror that here so the exports + stats
+  // match what's drawn. (Slice-active paths use the neighborhood set instead.)
+  const fullMeshServices = useMemo(
+    () =>
+      criticalOnly
+        ? index.services.filter(
+            (s) => index.dependencyCount(s.serviceId) > 0 || index.dependantCount(s.serviceId) > 0,
+          )
+        : index.services,
+    [index, criticalOnly],
+  );
+
   // Catalog services within the visible neighborhood (externals have no record).
   const visibleServices = useMemo(() => {
-    if (!neighborhood) return index.services;
+    if (!neighborhood) return fullMeshServices;
     return [...neighborhood.nodes]
       .map((id) => index.byId.get(id))
       .filter((s): s is NonNullable<typeof s> => !!s);
-  }, [neighborhood, index]);
+  }, [neighborhood, index, fullMeshServices]);
 
   const elements = useMemo(
     () =>
@@ -170,6 +183,13 @@ export function MeshView({
   const getMermaidNodes = (): Set<string> => {
     if (neighborhood) return neighborhood.nodes;
     const ids = new Set<string>();
+    if (criticalOnly) {
+      for (const e of index.allEdges) {
+        ids.add(e.from);
+        ids.add(e.to);
+      }
+      return ids;
+    }
     for (const s of index.services) ids.add(s.serviceId);
     for (const id of index.externals.keys()) ids.add(id);
     return ids;
@@ -193,7 +213,7 @@ export function MeshView({
 
   const statsLabel = isFiltered
     ? `${filteredServices.length} of ${index.services.length} services · ${visibleEdges.length} links`
-    : `${index.services.length} services · ${index.allEdges.length} links`;
+    : `${fullMeshServices.length} services · ${index.allEdges.length} links`;
 
   return (
     <div className="mesh">
