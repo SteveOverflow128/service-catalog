@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Catalog } from '../types';
-import { CatalogIndex, withoutInfrastructure } from './catalog';
+import { CatalogIndex } from './catalog';
 
 type Status =
   | { status: 'loading' }
   | { status: 'error'; error: string }
-  // `index` is the full graph; `indexNoInfra` drops ambient infrastructure
-  // nodes (and edges to them). The graph views switch between them via the
-  // shared "show infrastructure" toggle.
-  | { status: 'ready'; index: CatalogIndex; indexNoInfra: CatalogIndex };
+  // `index` is the full graph; `catalog` is the raw source the graph views
+  // filter on demand (infra / critical) via composable transforms.
+  | { status: 'ready'; index: CatalogIndex; catalog: Catalog };
 
 // `refetch` re-reads catalog.json and rebuilds the index. The app calls it
 // after a save so it sees its own writes immediately, rather than depending on
@@ -33,7 +32,7 @@ export function useCatalog(): State {
         setState({
           status: 'ready',
           index: new CatalogIndex(catalog),
-          indexNoInfra: new CatalogIndex(withoutInfrastructure(catalog)),
+          catalog,
         });
       })
       .catch((err: unknown) => {

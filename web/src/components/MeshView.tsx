@@ -8,6 +8,7 @@ import { Legend } from './Legend';
 import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
 import { InfraToggle } from './InfraToggle';
+import { CriticalToggle } from './CriticalToggle';
 import { BothIcon, CodeIcon, DownstreamIcon, TableIcon, UpstreamIcon } from './icons';
 
 type GroupByDim = 'product' | 'catalogGroup' | 'train' | 'resource.type' | 'resource.provider' | 'resource.region' | 'criticalityTier' | 'team';
@@ -85,11 +86,15 @@ export function MeshView({
   onSelectNode,
   showInfra,
   onToggleInfra,
+  criticalOnly,
+  onToggleCriticalOnly,
 }: {
   index: CatalogIndex;
   onSelectNode: (id: string) => void;
   showInfra: boolean;
   onToggleInfra: () => void;
+  criticalOnly: boolean;
+  onToggleCriticalOnly: () => void;
 }) {
   const [dim, setDim] = useState<GroupByDim | null>(null);
   const [dimValue, setDimValue] = useState<string | null>(null);
@@ -152,8 +157,8 @@ export function MeshView({
     () =>
       neighborhood
         ? buildSubgraphElements(index, neighborhood.nodes, neighborhood.edges)
-        : buildMeshElements(index),
-    [index, neighborhood],
+        : buildMeshElements(index, { pruneIsolated: criticalOnly }),
+    [index, neighborhood, criticalOnly],
   );
 
   const layoutKey = `${dim ?? 'all'}-${dimValue ?? 'all'}-${mode}-${reach}`;
@@ -278,8 +283,9 @@ export function MeshView({
           </div>
         )}
 
-        <span style={{ marginLeft: 'auto' }}>
+        <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 8 }}>
           <InfraToggle on={showInfra} onToggle={onToggleInfra} />
+          <CriticalToggle on={criticalOnly} onToggle={onToggleCriticalOnly} />
         </span>
       </div>
 

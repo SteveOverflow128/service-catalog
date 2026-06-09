@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCatalog } from './data/useCatalog';
-import { deriveFacets, type CatalogIndex } from './data/catalog';
+import { CatalogIndex, deriveFacets, withoutInfrastructure, withoutNonCritical } from './data/catalog';
+import type { Catalog } from './types';
 import { parseHash, viewToHash, type AppView } from './data/routing';
 import { TopBar } from './components/TopBar';
 import { CatalogView } from './components/CatalogView';
@@ -34,6 +35,9 @@ export default function App() {
   // drown out the real topology. Lifting it here makes the choice stick as the
   // user moves between the three graph views.
   const [showInfrastructure, setShowInfrastructure] = useState(false);
+  // Shared across map/mesh/flow: hide non-critical dependency edges, leaving the
+  // critical-path backbone. Off by default — everything shown.
+  const [criticalOnly, setCriticalOnly] = useState(false);
 
   // Remember the last top-level view so "back" from a map/detail returns there.
   useEffect(() => {
@@ -65,6 +69,7 @@ export default function App() {
 
   const clearFilters = useCallback(() => setFilters(emptyFilters()), []);
   const toggleInfra = useCallback(() => setShowInfrastructure((v) => !v), []);
+  const toggleCriticalOnly = useCallback(() => setCriticalOnly((v) => !v), []);
 
   const openDetail = useCallback((id: string) => setView({ kind: 'detail', id }), []);
   const openFlow = useCallback((id: string) => setView({ kind: 'flow', rootId: id }), []);
@@ -99,6 +104,12 @@ export default function App() {
     if (q) setView({ kind: 'catalog' });
   }, []);
 
+  // Lazy per-filter-combo CatalogIndex cache for the graph views. Keyed by
+  // "<dropInfra>:<dropCritical>"; rebuilt only when the underlying index
+  // identity changes (a refetch). Hook lives above the early returns.
+  const readyIndex = state.status === 'ready' ? state.index : null;
+  const graphIndexCache = useMemo(() => new Map<string, CatalogIndex>(), [readyIndex]);
+
   if (state.status === 'loading') {
     return (
       <div className="app">
@@ -127,7 +138,7 @@ export default function App() {
     );
   }
 
-  const { index, indexNoInfra } = state;
+  const { index, catalog } = state;
   const facets = deriveFacets(index.services);
 
   const detailService = view.kind === 'detail' ? index.byId.get(view.id) : undefined;
@@ -139,13 +150,31 @@ export default function App() {
       ? (index.byId.has(view.rootId) ? view.rootId : busiestHub(index))
       : '';
 
-  // The graph the three views traverse: the infra-pruned index unless the user
-  // has toggled infrastructure on. Root guard: a map/flow focused on an infra
-  // service must use the full index so its own focus node is never pruned away.
+  // The graph each view traverses, composed lazily from the raw catalog and
+  // cached by filter combo. Critical filtering needs no root guard — the BFS
+  // root always survives even if all its edges are non-critical — so it enters
+  // uniformly as `criticalOnly`. Infra keeps its root guard: a map/flow focused
+  // on an infra node must use the full index so its focus is never pruned.
   const isInfra = (id: string): boolean => !!index.byId.get(id)?.infrastructure;
-  const meshIndex = showInfrastructure ? index : indexNoInfra;
-  const mapIndex = showInfrastructure || mapRootIds.some(isInfra) ? index : indexNoInfra;
-  const flowIndex = showInfrastructure || isInfra(flowRootId) ? index : indexNoInfra;
+  const graphIndex = (dropInfra: boolean, dropCritical: boolean): CatalogIndex => {
+    const key = `${dropInfra}:${dropCritical}`;
+    let idx = graphIndexCache.get(key);
+    if (!idx) {
+      if (!dropInfra && !dropCritical) {
+        idx = index;
+      } else {
+        const filters: Array<(c: Catalog) => Catalog> = [];
+        if (dropInfra) filters.push(withoutInfrastructure);
+        if (dropCritical) filters.push(withoutNonCritical);
+        idx = new CatalogIndex(filters.reduce((c, f) => f(c), catalog));
+      }
+      graphIndexCache.set(key, idx);
+    }
+    return idx;
+  };
+  const meshIndex = graphIndex(!showInfrastructure, criticalOnly);
+  const mapIndex = graphIndex(!showInfrastructure && !mapRootIds.some(isInfra), criticalOnly);
+  const flowIndex = graphIndex(!showInfrastructure && !isInfra(flowRootId), criticalOnly);
 
   return (
     <div className="app">
@@ -207,6 +236,8 @@ export default function App() {
                 onToggleRoot={toggleRoot}
                 showInfra={showInfrastructure}
                 onToggleInfra={toggleInfra}
+                criticalOnly={criticalOnly}
+                onToggleCriticalOnly={toggleCriticalOnly}
               />
             </div>
           </div>
@@ -225,6 +256,8 @@ export default function App() {
               onReroot={openFlow}
               showInfra={showInfrastructure}
               onToggleInfra={toggleInfra}
+              criticalOnly={criticalOnly}
+              onToggleCriticalOnly={toggleCriticalOnly}
             />
           </div>
         ) : view.kind === 'mesh' ? (
@@ -233,6 +266,8 @@ export default function App() {
             onSelectNode={reroot}
             showInfra={showInfrastructure}
             onToggleInfra={toggleInfra}
+            criticalOnly={criticalOnly}
+            onToggleCriticalOnly={toggleCriticalOnly}
           />
         ) : (
           <CatalogView

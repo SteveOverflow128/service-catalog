@@ -8,6 +8,7 @@ import { Legend } from './Legend';
 import { MermaidExport } from './MermaidExport';
 import { CsvExport } from './CsvExport';
 import { InfraToggle } from './InfraToggle';
+import { CriticalToggle } from './CriticalToggle';
 import { BothIcon, CodeIcon, DownstreamIcon, TableIcon, UpstreamIcon } from './icons';
 
 const MODES: { key: MapMode; label: string; hint: string; Icon: typeof BothIcon }[] = [
@@ -29,6 +30,8 @@ export function DependencyMap({
   onToggleRoot,
   showInfra,
   onToggleInfra,
+  criticalOnly,
+  onToggleCriticalOnly,
 }: {
   index: CatalogIndex;
   rootIds: string[];
@@ -38,6 +41,8 @@ export function DependencyMap({
   onToggleRoot: (id: string) => void;
   showInfra: boolean;
   onToggleInfra: () => void;
+  criticalOnly: boolean;
+  onToggleCriticalOnly: () => void;
 }) {
   const [mode, setMode] = useState<MapMode>('both');
   const [depth, setDepth] = useState<Depth>(1);
@@ -103,6 +108,7 @@ export function DependencyMap({
         </div>
 
         <InfraToggle on={showInfra} onToggle={onToggleInfra} />
+        <CriticalToggle on={criticalOnly} onToggle={onToggleCriticalOnly} />
 
         <div className="mapstats mono">
           <span><b>{ego.nodes.size}</b> nodes</span>
